@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="SIGO Autorepuestos">
+  <!-- fondo redondeado oscuro -->
+  <rect width="64" height="64" rx="12" fill="#121212"/>
+  <!-- engranaje naranja -->
+  <g transform="translate(32 32)" fill="#ff6a00">
+    <path d="M0,-27 l4.5,0 2.2,7.8 a19,19 0 0 1 6.8,3.9 l7.6,-2.6 3.2,3.2 -4.3,7 a19,19 0 0 1 0,7.4 l4.3,7 -3.2,3.2 -7.6,-2.6 a19,19 0 0 1 -6.8,3.9 l-2.2,7.8 -9,0 -2.2,-7.8 a19,19 0 0 1 -6.8,-3.9 l-7.6,2.6 -3.2,-3.2 4.3,-7 a19,19 0 0 1 0,-7.4 l-4.3,-7 3.2,-3.2 7.6,2.6 a19,19 0 0 1 6.8,-3.9 l2.2,-7.8 z"/>
+  </g>
+  <!-- centro oscuro -->
+  <circle cx="32" cy="32" r="16" fill="#121212"/>
+  <!-- texto SIGO -->
+  <text x="32" y="37" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="900" letter-spacing="-0.5">
+    <tspan fill="#ffffff">SI</tspan><tspan fill="#ff6a00">GO</tspan>
+  </text>
+</svg>

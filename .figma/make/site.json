@@ -1,5 +1,9 @@
 {
-  "description": "A professional e-commerce platform offering automotive spare parts for light and heavy vehicles with seamless browsing, secure checkout, and admin management.",
+  "title": "SIGO Autorepuestos",
+  "description": "Repuestos automotrices de calidad para vehículos livianos y pesados en Guatemala. Encuentra motor, frenos, suspensión, filtros y más, con atención por WhatsApp.",
+  "icons": {
+    "icon": "/favicon.svg"
+  },
   "robots": {
     "index": false
   },
