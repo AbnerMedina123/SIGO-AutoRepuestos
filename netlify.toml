@@ -2,13 +2,16 @@
 # El sitio se construye con Vite y se publica la carpeta dist/.
 
 [build]
-  command = "npm run build"
+  # Instala dependencias con npm (usando package-lock.json) y luego construye.
+  # Forzamos npm para evitar que la plataforma intente usar pnpm.
+  command = "npm ci && npm run build"
   publish = "dist"
 
 [build.environment]
-  # Vite 8 requiere Node 20+. Fijamos Node 22 para que el build en Netlify
-  # use la misma versión que el proyecto (.mise.toml).
+  # Vite 8 requiere Node 20+. Fijamos Node 22.
   NODE_VERSION = "22"
+  # Evita que Netlify detecte/instale con pnpm o yarn automáticamente.
+  NPM_FLAGS = "--no-audit --no-fund"
 
 # SPA fallback: cualquier ruta desconocida sirve index.html para que
 # React Router maneje la navegación (evita 404 al refrescar /catalog, /admin, etc.)
