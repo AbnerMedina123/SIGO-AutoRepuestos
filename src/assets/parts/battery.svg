@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="500" viewBox="0 0 600 500" role="img" aria-label="Batería">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c1c1c"/><stop offset="1" stop-color="#0e0e0e"/></linearGradient>
+  <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d2d2d"/><stop offset="1" stop-color="#1a1a1a"/></linearGradient></defs>
+  <rect width="600" height="500" fill="url(#bg)"/>
+  <g opacity="0.05" stroke="#ff6a00" stroke-width="16"><line x1="-60" y1="140" x2="260" y2="-60"/><line x1="340" y1="600" x2="700" y2="160"/></g>
+  <g transform="translate(300 270)">
+    <rect x="-170" y="-90" width="340" height="190" rx="16" fill="url(#body)" stroke="#444" stroke-width="5"/>
+    <rect x="-170" y="-90" width="340" height="46" rx="16" fill="#ff6a00"/>
+    <!-- terminals -->
+    <rect x="-130" y="-120" width="50" height="36" rx="6" fill="#c0c0c0"/>
+    <rect x="80" y="-120" width="50" height="36" rx="6" fill="#444"/>
+    <text x="-105" y="-130" text-anchor="middle" font-family="Arial" font-size="34" font-weight="bold" fill="#fff">+</text>
+    <text x="105" y="-128" text-anchor="middle" font-family="Arial" font-size="38" font-weight="bold" fill="#aaa">−</text>
+    <!-- caps -->
+    <g fill="#1a1a1a"><rect x="-150" y="-10" width="60" height="30" rx="6"/><rect x="-80" y="-10" width="60" height="30" rx="6"/><rect x="-10" y="-10" width="60" height="30" rx="6"/><rect x="60" y="-10" width="60" height="30" rx="6"/></g>
+    <text x="0" y="75" text-anchor="middle" font-family="Arial" font-size="30" font-weight="bold" fill="#ff6a00">12V</text>
+  </g>
+  <text x="300" y="480" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#ff6a00" letter-spacing="2">BATERÍA</text>
+</svg>

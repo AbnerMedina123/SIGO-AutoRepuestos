@@ -1,0 +1,10 @@
+{
+  "description": "A professional e-commerce platform offering automotive spare parts for light and heavy vehicles with seamless browsing, secure checkout, and admin management.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

@@ -1,0 +1,18 @@
+# Configuración de despliegue para Netlify
+# El sitio se construye con Vite y se publica la carpeta dist/.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Vite 8 requiere Node 20+. Fijamos Node 22 para que el build en Netlify
+  # use la misma versión que el proyecto (.mise.toml).
+  NODE_VERSION = "22"
+
+# SPA fallback: cualquier ruta desconocida sirve index.html para que
+# React Router maneje la navegación (evita 404 al refrescar /catalog, /admin, etc.)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

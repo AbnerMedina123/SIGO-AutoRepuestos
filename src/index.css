@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-sigo-orange: #FF6200;
+  --color-sigo-orange-dark: #CC4E00;
+  --color-sigo-orange-light: #FF8A3D;
+  --color-sigo-black: #0A0A0A;
+  --color-sigo-dark: #141414;
+  --color-sigo-surface: #1C1C1C;
+  --color-sigo-card: #222222;
+  --color-sigo-border: #2E2E2E;
+  --color-sigo-muted: #6B6B6B;
+  --color-sigo-light: #AAAAAA;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #141414; }
+::-webkit-scrollbar-thumb { background: #2E2E2E; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #FF6200; }
+
+/* Orange focus rings */
+*:focus-visible {
+  outline: 2px solid #FF6200;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions */
+a, button { transition: all 0.18s ease; }
+
+/* Price styling */
+.price-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* WhatsApp pulse */
+@keyframes wa-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(37, 211, 102, 0); }
+}
+.wa-pulse { animation: wa-pulse 2.4s ease infinite; }
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #FF6200, #FF8A3D);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(255, 98, 0, 0.15);
+}
+
+/* Diagonal stripe accent */
+.stripe-accent {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255,98,0,0.08) 4px,
+    rgba(255,98,0,0.08) 8px
+  );
+}
+
+/* Table row hover */
+tr.row-hover:hover td { background: rgba(255,98,0,0.05); }
+
+/* Badge animations */
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.badge-pulse { animation: badge-pulse 1.8s ease infinite; }
+
+/* Step indicator line */
+.step-line { height: 2px; background: linear-gradient(to right, #FF6200, #2E2E2E); }
+
+/* Chart tooltip custom */
+.recharts-tooltip-wrapper { border-radius: 8px !important; }
+
+/* Admin sidebar transition */
+.sidebar-item {
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+.sidebar-item.active, .sidebar-item:hover {
+  border-left-color: #FF6200;
+  background: rgba(255, 98, 0, 0.08);
+}
+
+/* Mobile menu fade */
+@keyframes menu-fade {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.menu-fade { animation: menu-fade 0.2s ease forwards; }
+
+/* Order status pill */
+.status-pending   { background: rgba(255,170,0,0.15); color: #FFAA00; }
+.status-confirmed { background: rgba(59,130,246,0.15); color: #60A5FA; }
+.status-preparing { background: rgba(168,85,247,0.15); color: #C084FC; }
+.status-shipped   { background: rgba(20,184,166,0.15); color: #2DD4BF; }
+.status-delivered { background: rgba(34,197,94,0.15); color: #4ADE80; }
+.status-cancelled { background: rgba(239,68,68,0.15); color: #F87171; }
+
+/* Range input */
+input[type="range"] { accent-color: #FF6200; }
+
+/* Shared input style */
+.input-sigo {
+  width: 100%;
+  background: #1C1C1C;
+  border: 1px solid #2E2E2E;
+  color: #FFFFFF;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: border-color 0.18s ease;
+  display: block;
+}
+.input-sigo:focus {
+  outline: none;
+  border-color: #FF6200;
+}
+.input-sigo::placeholder { color: #6B6B6B; }
+
+/* Admin label */
+.label-admin {
+  display: block;
+  color: #6B6B6B;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.375rem;
+}
+
+/* Select styling */
+select.input-sigo option { background: #1C1C1C; color: #FFFFFF; }
+
+/* Textarea */
+textarea.input-sigo { resize: vertical; min-height: 80px; }
+
+/* Number input */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { opacity: 1; }

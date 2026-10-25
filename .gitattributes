@@ -1,0 +1,13 @@
+# Normaliza los finales de línea de archivos de texto.
+* text=auto
+
+# Los assets del proyecto (imágenes pequeñas) se versionan como binarios
+# normales de git. No usamos Git LFS para evitar dependencias extra en el
+# despliegue (Netlify/GitHub).
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.svg   text
