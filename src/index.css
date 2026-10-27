@@ -28,6 +28,30 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Cursor de mano en todos los elementos clicables, para que el usuario
+   reconozca qué puede presionar. Los elementos deshabilitados muestran el
+   cursor "no permitido". */
+button,
+a,
+[role='button'],
+label[for],
+select,
+summary,
+input[type='checkbox'],
+input[type='radio'],
+input[type='submit'],
+input[type='button'],
+input[type='file'] {
+  cursor: pointer;
+}
+
+button:disabled,
+button[disabled],
+[aria-disabled='true'],
+.disabled {
+  cursor: not-allowed;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;

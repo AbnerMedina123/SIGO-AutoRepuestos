@@ -52,7 +52,7 @@ export function AdminCategories() {
           id: slugify(form.name),
           name: form.name.trim(),
           description: form.description.trim(),
-          image: "",
+          image: form.image,
           icon: "",
           count: 0,
           active: true,
@@ -62,6 +62,7 @@ export function AdminCategories() {
           ...editing,
           name: form.name.trim(),
           description: form.description.trim(),
+          image: form.image,
         })
       }
       setEditing(null)
