@@ -280,6 +280,36 @@ export async function updateCustomerStatus(id: string, status: string): Promise<
   if (error) throw error;
 }
 
+// ---------- Subida de imágenes a Supabase Storage (solo admin) ----------
+
+/**
+ * Sube un archivo de imagen al bucket "images" y devuelve su URL pública.
+ * `folder` organiza los archivos (p. ej. "categories" o "products").
+ * Lanza error si el archivo no es una imagen o supera el tamaño máximo.
+ */
+export async function uploadImage(file: File, folder = 'uploads'): Promise<string> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El archivo debe ser una imagen (JPG, PNG, WebP, etc.).');
+  }
+  const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+  if (file.size > MAX_BYTES) {
+    throw new Error('La imagen supera el tamaño máximo de 5 MB.');
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+  const safeName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error } = await supabase.storage.from('images').upload(safeName, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type,
+  });
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('images').getPublicUrl(safeName);
+  return data.publicUrl;
+}
+
 // ---------- Escritura de categorías (solo admin) ----------
 
 export async function upsertCategory(category: Category): Promise<void> {
@@ -288,7 +318,10 @@ export async function upsertCategory(category: Category): Promise<void> {
     name: category.name,
     description: category.description,
     icon: category.icon,
-    image: '',
+    // Guarda la URL de imagen solo si es una URL remota (http) subida a
+    // Storage. Las rutas locales de los SVG empaquetados (ej. /assets/...) no
+    // se persisten: la app ya resuelve una imagen local por categoría.
+    image: category.image?.startsWith('http') ? category.image : '',
     count: category.count,
     active: category.active ?? true,
   });

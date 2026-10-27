@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useData } from "../../store/DataProvider"
 import type { Category } from "../../data/mockData"
 import { imgFallback } from "../../lib/images"
+import { ImageUploader } from "../../components/ui/ImageUploader"
 import {
   PlusIcon,
   EditIcon,
@@ -236,17 +237,12 @@ export function AdminCategories() {
                   className="input-sigo"
                 />
               </div>
-              <div>
-                <label className="label-admin">URL de imagen</label>
-                <input
-                  value={form.image}
-                  onChange={(event) =>
-                    setForm({ ...form, image: event.target.value })
-                  }
-                  className="input-sigo"
-                  placeholder="https://..."
-                />
-              </div>
+              <ImageUploader
+                label="Imagen de la categoría"
+                value={form.image}
+                folder="categories"
+                onChange={(url) => setForm({ ...form, image: url })}
+              />
             </div>
             <div className="flex gap-3 mt-6">
               <button
