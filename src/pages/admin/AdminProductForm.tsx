@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../../store/DataProvider"
-import { UploadIcon } from "../../components/ui/Icons"
+import { UploadIcon, XIcon } from "../../components/ui/Icons"
 import { imgFallback } from "../../lib/images"
+import { uploadImage } from "../../lib/api"
 
 export function AdminProductForm({ mode }: { mode: "new" | "edit" }) {
   const { id } = useParams()
@@ -29,6 +30,36 @@ export function AdminProductForm({ mode }: { mode: "new" | "edit" }) {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
+
+  // Galería de imágenes del producto (URLs ya subidas a Supabase Storage).
+  const [images, setImages] = useState<string[]>(existing?.images ?? [])
+  const [uploading, setUploading] = useState(false)
+  const [imgError, setImgError] = useState("")
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setImgError("")
+    setUploading(true)
+    try {
+      const urls: string[] = []
+      for (const file of Array.from(files)) {
+        const url = await uploadImage(file, "products")
+        urls.push(url)
+      }
+      setImages((prev) => [...prev, ...urls])
+    } catch (e) {
+      console.error(e)
+      setImgError(
+        e instanceof Error
+          ? e.message
+          : "No se pudo subir la imagen. Verifica tu sesión de administrador.",
+      )
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const removeImage = (url: string) => setImages((prev) => prev.filter((u) => u !== url))
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,8 +94,9 @@ export function AdminProductForm({ mode }: { mode: "new" | "edit" }) {
       description: form.description.trim(),
       warranty: form.warranty.trim(),
       status: form.status,
-      image: existing?.image ?? "",
-      images: existing?.images ?? [],
+      // La primera imagen de la galería es la principal del producto.
+      image: images[0] ?? "",
+      images: images,
     }
 
     try {
@@ -213,30 +245,50 @@ export function AdminProductForm({ mode }: { mode: "new" | "edit" }) {
               <h3 className="font-display font-bold text-white text-lg uppercase mb-4">
                 Imágenes del producto
               </h3>
-              <label className="block border-2 border-dashed border-sigo-border hover:border-sigo-orange rounded-xl p-10 text-center transition-colors cursor-pointer group">
-                <UploadIcon
-                  size={32}
-                  className="mx-auto text-sigo-muted group-hover:text-sigo-orange mb-3 transition-colors"
-                />
-                <p className="text-sigo-muted text-sm">
-                  Arrastra imágenes aquí o{" "}
-                  <span className="text-sigo-orange">selecciona archivos</span>
-                </p>
-                <p className="text-sigo-muted text-xs mt-1">
-                  PNG o JPG, máximo 5 MB. La primera imagen será la principal.
-                </p>
+              <label
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  handleFiles(e.dataTransfer.files)
+                }}
+                className="block border-2 border-dashed border-sigo-border hover:border-sigo-orange rounded-xl p-10 text-center transition-colors cursor-pointer group"
+              >
+                {uploading ? (
+                  <div className="flex flex-col items-center gap-3 text-sigo-muted">
+                    <div className="w-8 h-8 border-4 border-sigo-border border-t-sigo-orange rounded-full animate-spin" />
+                    <span className="text-sm">Subiendo imágenes...</span>
+                  </div>
+                ) : (
+                  <>
+                    <UploadIcon
+                      size={32}
+                      className="mx-auto text-sigo-muted group-hover:text-sigo-orange mb-3 transition-colors"
+                    />
+                    <p className="text-sigo-muted text-sm">
+                      Arrastra imágenes aquí o{" "}
+                      <span className="text-sigo-orange">selecciona archivos</span>
+                    </p>
+                    <p className="text-sigo-muted text-xs mt-1">
+                      PNG o JPG, máximo 5 MB. La primera imagen será la principal.
+                    </p>
+                  </>
+                )}
                 <input
                   type="file"
-                  accept="image/png,image/jpeg"
+                  accept="image/png,image/jpeg,image/webp"
                   multiple
                   className="sr-only"
+                  onChange={(e) => handleFiles(e.target.files)}
                 />
               </label>
-              {existing?.images && existing.images.length > 0 && (
-                <div className="flex gap-2 mt-3">
-                  {existing.images.map((img, i) => (
+
+              {imgError && <p className="text-red-400 text-xs mt-2">{imgError}</p>}
+
+              {images.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {images.map((img, i) => (
                     <div
-                      key={i}
+                      key={img}
                       className="relative rounded-lg overflow-hidden border border-sigo-border"
                       style={{ width: 72, height: 72 }}
                     >
@@ -246,6 +298,19 @@ export function AdminProductForm({ mode }: { mode: "new" | "edit" }) {
                         onError={imgFallback}
                         className="w-full h-full object-cover"
                       />
+                      {i === 0 && (
+                        <span className="absolute bottom-0 inset-x-0 bg-sigo-orange text-white text-[9px] font-bold text-center py-0.5">
+                          PRINCIPAL
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(img)}
+                        title="Quitar imagen"
+                        className="absolute top-0.5 right-0.5 bg-black/70 hover:bg-red-500 text-white rounded-full p-0.5"
+                      >
+                        <XIcon size={12} />
+                      </button>
                     </div>
                   ))}
                 </div>
