@@ -128,7 +128,7 @@ export function Home() {
             </div>
             <h2 className="font-display font-black text-4xl text-white uppercase">Categorías</h2>
           </div>
-          <Link to="/catalog" className="flex items-center gap-1 text-sigo-orange hover:text-sigo-orange-light text-sm font-semibold">
+          <Link to="/categories" className="flex items-center gap-1 text-sigo-orange hover:text-sigo-orange-light text-sm font-semibold">
             Ver todas <ChevronRightIcon size={16} />
           </Link>
         </div>

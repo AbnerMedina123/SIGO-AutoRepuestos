@@ -8,7 +8,7 @@ import sigoLogo from '../../assets/sigo-logo.png';
 const navLinks = [
   { label: 'Inicio', to: '/' },
   { label: 'Repuestos', to: '/catalog' },
-  { label: 'Categorías', to: '/catalog#categorias' },
+  { label: 'Categorías', to: '/categories' },
   { label: 'Ofertas', to: '/catalog?filter=sale' },
   { label: 'Nosotros', to: '/about' },
   { label: 'Contacto', to: '/contact' },

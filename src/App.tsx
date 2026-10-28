@@ -21,6 +21,7 @@ import { Terms } from './pages/customer/Terms';
 import { NotFound } from './pages/customer/NotFound';
 import { About } from './pages/customer/About';
 import { Contact } from './pages/customer/Contact';
+import { Categories } from './pages/customer/Categories';
 
 // Admin
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -57,6 +58,7 @@ export default function App() {
           {/* Customer routes */}
           <Route path="/" element={<CustomerLayout><Home /></CustomerLayout>} />
           <Route path="/catalog" element={<CustomerLayout><Catalog /></CustomerLayout>} />
+          <Route path="/categories" element={<CustomerLayout><Categories /></CustomerLayout>} />
           <Route path="/product/:id" element={<CustomerLayout><ProductDetail /></CustomerLayout>} />
           <Route path="/cart" element={<CustomerLayout><Cart /></CustomerLayout>} />
           <Route path="/checkout" element={<CustomerLayout><Checkout /></CustomerLayout>} />
