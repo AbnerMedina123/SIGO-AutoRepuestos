@@ -50,6 +50,21 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
+/**
+ * Inicia sesión con Google (OAuth). Redirige al usuario a Google y, al volver,
+ * regresa a `/dashboard` ya autenticado. Requiere que el proveedor Google esté
+ * configurado en Supabase (Authentication -> Providers -> Google).
+ */
+export async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+  if (error) throw error;
+}
+
 /** Devuelve la sesión actual (o null si no hay). */
 export async function getSession() {
   const { data } = await supabase.auth.getSession();

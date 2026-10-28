@@ -4,6 +4,7 @@ import { useStore } from "../../store/useStore"
 import {
   signInWithPassword,
   signUpWithPassword,
+  signInWithGoogle,
   isCurrentUserAdmin,
   signOut,
   authErrorMessage,
@@ -155,8 +156,10 @@ export function Login() {
             <button
               type="button"
               onClick={() => {
-                login("cliente.google@correo.com")
-                navigate("/dashboard")
+                signInWithGoogle().catch((err) => {
+                  console.error(err)
+                  setError(authErrorMessage(err))
+                })
               }}
               className="w-full flex items-center justify-center gap-3 border border-sigo-border hover:border-sigo-muted text-sigo-light hover:text-white py-3 rounded-xl transition-colors font-medium"
             >

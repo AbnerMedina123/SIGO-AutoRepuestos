@@ -14,6 +14,7 @@ import { ProductDetail } from './pages/customer/ProductDetail';
 import { Cart } from './pages/customer/Cart';
 import { Checkout } from './pages/customer/Checkout';
 import { Login, Register } from './pages/customer/Auth';
+import { AuthCallback } from './pages/customer/AuthCallback';
 import { Dashboard } from './pages/customer/Dashboard';
 import { OrderConfirmation } from './pages/customer/OrderConfirmation';
 import { Privacy } from './pages/customer/Privacy';
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/order-confirmation" element={<CustomerLayout><OrderConfirmation /></CustomerLayout>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/dashboard" element={<CustomerLayout><Dashboard /></CustomerLayout>} />
           <Route path="/orders" element={<CustomerLayout><Dashboard /></CustomerLayout>} />
           <Route path="/about" element={<CustomerLayout><About /></CustomerLayout>} />
