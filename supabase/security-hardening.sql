@@ -1,9 +1,6 @@
 -- ============================================================================
 -- SIGO Autorepuestos — Endurecimiento de seguridad (RLS)
 -- ============================================================================
--- Ejecuta en: Supabase -> SQL Editor -> New query -> Run.
--- (Con la traducción del navegador DESACTIVADA: el SQL va en inglés.)
---
 -- Las políticas de inserción pública (checkout y registro de cliente) usaban
 -- `with check (true)`, lo que permitía insertar registros arbitrarios desde la
 -- API pública. Aquí se reemplazan por políticas con validaciones de cordura
