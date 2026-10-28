@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useStore } from "../../store/useStore"
 import { signInWithPassword, isCurrentUserAdmin, signOut } from "../../lib/auth"
+import { registerCustomer } from "../../lib/api"
 import sigoLogo from "../../assets/sigo-logo.png"
 
 export function Login() {
@@ -217,7 +218,9 @@ export function Register() {
   const [showPasswords, setShowPasswords] = useState(false)
   const [legalInfo, setLegalInfo] = useState("")
 
-  const handleRegister = (e: React.FormEvent) => {
+  const [registering, setRegistering] = useState(false)
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.terms) {
       setError("Acepta los términos y condiciones.")
@@ -231,8 +234,23 @@ export function Register() {
       setError("Completa todos los campos obligatorios.")
       return
     }
-    login(form.email)
-    navigate("/dashboard")
+    setError("")
+    setRegistering(true)
+    try {
+      // Registra al cliente en la base de datos para que aparezca en el panel.
+      await registerCustomer({
+        fullName: `${form.firstName} ${form.lastName}`.trim(),
+        email: form.email,
+        phone: form.phone,
+      })
+    } catch (err) {
+      console.error(err)
+      // No bloquea el acceso del cliente si falla el registro en la BD.
+    } finally {
+      setRegistering(false)
+      login(form.email)
+      navigate("/dashboard")
+    }
   }
 
   const field = (k: keyof typeof form) => ({
@@ -389,9 +407,10 @@ export function Register() {
 
             <button
               type="submit"
-              className="w-full bg-sigo-orange hover:bg-sigo-orange-dark text-white font-display font-bold text-lg py-3.5 rounded-xl transition-colors uppercase"
+              disabled={registering}
+              className="w-full bg-sigo-orange hover:bg-sigo-orange-dark text-white font-display font-bold text-lg py-3.5 rounded-xl transition-colors uppercase disabled:opacity-60"
             >
-              Crear cuenta
+              {registering ? "Creando cuenta..." : "Crear cuenta"}
             </button>
           </form>
 
