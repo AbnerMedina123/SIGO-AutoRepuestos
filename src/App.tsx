@@ -32,6 +32,7 @@ import { AdminInventory } from './pages/admin/AdminInventory';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminCustomers } from './pages/admin/AdminCustomers';
 import { AdminReports } from './pages/admin/AdminReports';
+import { AdminReportsOps } from './pages/admin/AdminReportsOps';
 import { AdminSettings } from './pages/admin/AdminSettings';
 import { AdminCategories } from './pages/admin/AdminCategories';
 import { AdminRoute } from './pages/admin/AdminRoute';
@@ -81,7 +82,7 @@ export default function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="sales" element={<AdminReports />} />
-            <Route path="reports" element={<AdminReports />} />
+            <Route path="reports" element={<AdminReportsOps />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 

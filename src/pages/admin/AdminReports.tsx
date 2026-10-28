@@ -12,7 +12,6 @@ import {
 import { useData } from "../../store/DataProvider"
 import { useState } from "react"
 import { formatCurrency } from "../../lib/whatsapp"
-import { useLocation } from "react-router-dom"
 import {
   salesByMonth,
   salesByWeekday,
@@ -24,7 +23,6 @@ import {
 } from "../../lib/analytics"
 
 export function AdminReports() {
-  const location = useLocation()
   const { products, orders, customers, categories } = useData()
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("weekly")
 
@@ -75,7 +73,7 @@ export function AdminReports() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display font-black text-4xl text-white uppercase">
-            {location.pathname.endsWith("/sales") ? "Ventas" : "Reportes"}
+            Ventas
           </h1>
           <p className="text-sigo-muted text-sm mt-1">
             Solo se incluyen ventas confirmadas; las solicitudes de WhatsApp
