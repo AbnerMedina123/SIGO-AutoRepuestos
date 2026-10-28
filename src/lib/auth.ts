@@ -12,6 +12,40 @@ export async function signInWithPassword(email: string, password: string) {
   return data;
 }
 
+/**
+ * Registra una cuenta nueva de cliente en Supabase Auth.
+ * Supabase valida el formato del correo y guarda la contraseña cifrada.
+ * `metadata` se guarda en el perfil del usuario (nombre, teléfono).
+ */
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+  metadata?: Record<string, string>,
+) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: metadata },
+  });
+  if (error) throw error;
+  return data;
+}
+
+/** Traduce los errores de Supabase Auth a mensajes claros en español. */
+export function authErrorMessage(error: unknown): string {
+  const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  if (msg.includes('invalid login credentials')) return 'Correo o contraseña incorrectos.';
+  if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo antes de iniciar sesión.';
+  if (msg.includes('user already registered') || msg.includes('already registered'))
+    return 'Ya existe una cuenta con ese correo. Inicia sesión.';
+  if (msg.includes('password should be at least') || msg.includes('password'))
+    return 'La contraseña debe tener al menos 6 caracteres.';
+  if (msg.includes('unable to validate email') || msg.includes('invalid email') || msg.includes('email'))
+    return 'Ingresa un correo electrónico válido.';
+  if (msg.includes('rate limit')) return 'Demasiados intentos. Espera un momento e inténtalo de nuevo.';
+  return 'Ocurrió un error. Verifica tus datos e inténtalo de nuevo.';
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }

@@ -1,7 +1,13 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useStore } from "../../store/useStore"
-import { signInWithPassword, isCurrentUserAdmin, signOut } from "../../lib/auth"
+import {
+  signInWithPassword,
+  signUpWithPassword,
+  isCurrentUserAdmin,
+  signOut,
+  authErrorMessage,
+} from "../../lib/auth"
 import { registerCustomer } from "../../lib/api"
 import sigoLogo from "../../assets/sigo-logo.png"
 
@@ -24,9 +30,7 @@ export function Login() {
     setError("")
     setLoading(true)
     try {
-      // Intenta autenticar contra Supabase. Si el correo corresponde a un
-      // administrador registrado, lo llevamos al panel; si no, continúa como
-      // cliente normal.
+      // Autentica contra Supabase: verifica de verdad la contraseña.
       await signInWithPassword(email.trim(), password)
       const admin = await isCurrentUserAdmin()
       if (admin) {
@@ -36,12 +40,10 @@ export function Login() {
         login(email.trim())
         navigate("/dashboard")
       }
-    } catch {
-      // No existe esa cuenta en Supabase: permitimos acceso de cliente
-      // (flujo público de demostración, los pedidos se coordinan por WhatsApp).
+    } catch (err) {
+      // Credenciales incorrectas o cuenta inexistente: NO se concede acceso.
       await signOut().catch(() => {})
-      login(email.trim())
-      navigate("/dashboard")
+      setError(authErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -222,34 +224,54 @@ export function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.terms) {
-      setError("Acepta los términos y condiciones.")
+    const email = form.email.trim()
+
+    // Validaciones previas al registro.
+    if (!form.firstName.trim() || !email) {
+      setError("Completa todos los campos obligatorios.")
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Ingresa un correo electrónico válido.")
+      return
+    }
+    if (form.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.")
       return
     }
     if (form.password !== form.confirm) {
       setError("Las contraseñas no coinciden.")
       return
     }
-    if (!form.email || !form.firstName) {
-      setError("Completa todos los campos obligatorios.")
+    if (!form.terms) {
+      setError("Acepta los términos y condiciones.")
       return
     }
+
     setError("")
     setRegistering(true)
     try {
-      // Registra al cliente en la base de datos para que aparezca en el panel.
+      // Crea la cuenta real en Supabase Auth (valida el correo y cifra la
+      // contraseña). Guarda nombre y teléfono como metadatos del usuario.
+      await signUpWithPassword(email, form.password, {
+        full_name: `${form.firstName} ${form.lastName}`.trim(),
+        phone: form.phone.trim(),
+      })
+
+      // Registra también al cliente en la tabla para que aparezca en el panel.
       await registerCustomer({
         fullName: `${form.firstName} ${form.lastName}`.trim(),
-        email: form.email,
+        email,
         phone: form.phone,
-      })
+      }).catch(() => {})
+
+      login(email)
+      navigate("/dashboard")
     } catch (err) {
       console.error(err)
-      // No bloquea el acceso del cliente si falla el registro en la BD.
+      setError(authErrorMessage(err))
     } finally {
       setRegistering(false)
-      login(form.email)
-      navigate("/dashboard")
     }
   }
 
