@@ -1,9 +1,6 @@
 -- ============================================================================
 -- SIGO Autorepuestos — Datos iniciales (seed)
 -- ============================================================================
--- Ejecuta este archivo DESPUÉS de schema.sql en el SQL Editor de Supabase.
--- Migra las categorías, productos, clientes y pedidos de ejemplo.
---
 -- Nota sobre imágenes: el campo `image`/`images` se deja vacío. La aplicación
 -- resuelve una ilustración local por categoría (src/assets/parts/*.svg) cuando
 -- el producto no trae imagen, así nunca hay imágenes rotas. Cuando subas fotos

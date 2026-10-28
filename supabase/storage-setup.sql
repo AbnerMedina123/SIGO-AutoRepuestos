@@ -1,9 +1,6 @@
 -- ============================================================================
 -- SIGO Autorepuestos — Almacenamiento de imágenes (Supabase Storage)
 -- ============================================================================
--- Ejecuta este archivo en: Supabase -> tu proyecto -> SQL Editor -> New query
--- -> pega todo -> Run.
---
 -- Crea un bucket público llamado "images" para guardar imágenes de categorías
 -- y productos subidas desde el panel de administrador. Lectura pública (para
 -- que se vean en la tienda) y escritura solo para administradores (según la

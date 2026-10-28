@@ -1,9 +1,6 @@
 -- ============================================================================
 -- SIGO Autorepuestos — Esquema de base de datos (Supabase / PostgreSQL)
 -- ============================================================================
--- Ejecuta este archivo completo en: Supabase -> tu proyecto -> SQL Editor ->
--- New query -> pega todo -> Run.
---
 -- Es idempotente en lo posible: puedes volver a correrlo si necesitas
 -- recrear el esquema (las tablas se eliminan y recrean).
 -- ============================================================================

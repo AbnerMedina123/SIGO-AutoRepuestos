@@ -1,9 +1,6 @@
 -- ============================================================================
 -- SIGO Autorepuestos — Limpieza de datos (dejar el sistema "en blanco")
 -- ============================================================================
--- Ejecuta en: Supabase -> SQL Editor -> New query -> Run.
--- (Asegúrate de que el navegador NO traduzca la página: el SQL debe ir en inglés.)
---
 -- Borra productos, pedidos, renglones de pedido y clientes de ejemplo para que
 -- el administrador vea datos reales a medida que se registran. CONSERVA las
 -- categorías (estructura base de la tienda) y pone sus conteos en 0 para que
