@@ -9,6 +9,8 @@ import {
   type ShippingInfo,
 } from '../../lib/whatsapp';
 import { createOrder, registerCustomer } from '../../lib/api';
+import { addLocalOrder } from '../../lib/localOrders';
+import type { Order } from '../../data/mockData';
 
 type Step = 'shipping' | 'review';
 
@@ -75,6 +77,16 @@ export function Checkout() {
         email: info.email,
         phone: info.phone,
       });
+      const fullAddress = `${info.address}, ${info.zone ? info.zone + ', ' : ''}${info.municipality}, ${info.department}`;
+      const orderItems = items.map(({ product, quantity }) => ({
+        productId: product.id,
+        productName: product.name,
+        productCode: product.code,
+        quantity,
+        unitPrice: product.salePrice ?? product.price,
+        image: product.image,
+      }));
+
       await createOrder({
         id: orderId,
         customerId,
@@ -85,15 +97,28 @@ export function Checkout() {
         total,
         paymentMethod: 'Pedido por WhatsApp',
         deliveryMethod: 'Entrega a domicilio',
-        address: `${info.address}, ${info.zone ? info.zone + ', ' : ''}${info.municipality}, ${info.department}`,
-        items: items.map(({ product, quantity }) => ({
-          productId: product.id,
-          productName: product.name,
-          productCode: product.code,
-          quantity,
-          unitPrice: product.salePrice ?? product.price,
-        })),
+        address: fullAddress,
+        items: orderItems,
       });
+
+      // Guarda una copia del pedido en el navegador del cliente para que pueda
+      // verlo en "Mis pedidos" (la tabla de Supabase solo la lee el admin).
+      const localOrder: Order = {
+        id: orderId,
+        customerId: customerId ?? '',
+        customerName: info.fullName,
+        date: new Date().toISOString().slice(0, 10),
+        items: orderItems,
+        subtotal: cartTotal,
+        discount: 0,
+        shipping,
+        total,
+        paymentMethod: 'Pedido por WhatsApp',
+        deliveryMethod: 'Entrega a domicilio',
+        status: 'Pending',
+        address: fullAddress,
+      };
+      addLocalOrder(info.email, localOrder);
     } catch (e) {
       console.error('No se pudo guardar el pedido en la base de datos:', e);
     }

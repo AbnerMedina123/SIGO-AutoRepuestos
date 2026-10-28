@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useStore } from "../../store/useStore"
 import type { Order } from "../../data/mockData"
 import { OrderStatusBadge } from "../../components/ui/Badge"
 import { imgFallback } from "../../lib/images"
+import { loadLocalOrders } from "../../lib/localOrders"
 import {
   UserIcon,
   PackageIcon,
@@ -14,6 +15,44 @@ import {
 import { formatCurrency } from "../../lib/whatsapp"
 
 type Section = "orders" | "profile" | "addresses" | "favorites"
+
+interface Address {
+  id: string
+  name: string
+  department: string
+  municipality: string
+  detail: string
+}
+
+// Las direcciones del cliente se guardan en el navegador (localStorage),
+// por usuario (según su correo). El modelo actual no tiene cuentas reales por
+// cliente, así que esto permite que cada quien conserve sus direcciones en su
+// dispositivo sin requerir una tabla ni autenticación.
+const addressKey = (email?: string) => `sigo-addresses:${email ?? "guest"}`
+
+function loadAddresses(email?: string): Address[] {
+  try {
+    const raw = localStorage.getItem(addressKey(email))
+    return raw ? (JSON.parse(raw) as Address[]) : []
+  } catch {
+    return []
+  }
+}
+
+function saveAddresses(email: string | undefined, list: Address[]) {
+  try {
+    localStorage.setItem(addressKey(email), JSON.stringify(list))
+  } catch {
+    // Ignora si el almacenamiento no está disponible.
+  }
+}
+
+const emptyAddress: Omit<Address, "id"> = {
+  name: "",
+  department: "",
+  municipality: "",
+  detail: "",
+}
 
 const stepOrder: string[] = [
   "Pending",
@@ -56,7 +95,65 @@ export function Dashboard() {
   const navigate = useNavigate()
   const [section, setSection] = useState<Section>("orders")
   const [notice, setNotice] = useState("")
+
+  // Direcciones del cliente (persistidas en localStorage por correo).
+  const [addresses, setAddresses] = useState<Address[]>([])
   const [showAddressForm, setShowAddressForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [addrForm, setAddrForm] = useState<Omit<Address, "id">>(emptyAddress)
+
+  useEffect(() => {
+    setAddresses(loadAddresses(user?.email))
+  }, [user?.email])
+
+  const persist = (list: Address[]) => {
+    setAddresses(list)
+    saveAddresses(user?.email, list)
+  }
+
+  const openNewAddress = () => {
+    setEditingId(null)
+    setAddrForm({ ...emptyAddress, name: user?.name ?? "" })
+    setShowAddressForm(true)
+  }
+
+  const openEditAddress = (a: Address) => {
+    setEditingId(a.id)
+    setAddrForm({ name: a.name, department: a.department, municipality: a.municipality, detail: a.detail })
+    setShowAddressForm(true)
+  }
+
+  const saveAddress = () => {
+    if (!addrForm.name.trim() || !addrForm.detail.trim()) {
+      setNotice("Completa al menos el nombre y la dirección.")
+      setTimeout(() => setNotice(""), 2500)
+      return
+    }
+    if (editingId) {
+      persist(addresses.map((a) => (a.id === editingId ? { ...a, ...addrForm } : a)))
+      setNotice("Dirección actualizada correctamente.")
+    } else {
+      persist([...addresses, { id: `addr-${Date.now()}`, ...addrForm }])
+      setNotice("Dirección agregada correctamente.")
+    }
+    setShowAddressForm(false)
+    setEditingId(null)
+    setTimeout(() => setNotice(""), 2500)
+  }
+
+  const deleteAddress = (id: string) => {
+    persist(addresses.filter((a) => a.id !== id))
+    setNotice("Dirección eliminada.")
+    setTimeout(() => setNotice(""), 2500)
+  }
+
+  const makePrimary = (id: string) => {
+    const target = addresses.find((a) => a.id === id)
+    if (!target) return
+    persist([target, ...addresses.filter((a) => a.id !== id)])
+    setNotice("Dirección principal actualizada.")
+    setTimeout(() => setNotice(""), 2500)
+  }
 
   if (!isLoggedIn) {
     return (
@@ -75,10 +172,13 @@ export function Dashboard() {
     )
   }
 
-  // Los pedidos del cliente se coordinan por WhatsApp y los gestiona el
-  // administrador. Aquí mostramos un estado vacío hasta integrar pedidos por
-  // cuenta de cliente.
-  const myOrders: Order[] = []
+  // Pedidos del cliente: copia local de los pedidos que realizó en este
+  // navegador (el pedido también queda guardado en Supabase para el admin).
+  const [myOrders, setMyOrders] = useState<Order[]>([])
+
+  useEffect(() => {
+    setMyOrders(loadLocalOrders(user?.email))
+  }, [user?.email])
 
   const sideItems = [
     { id: "orders", icon: <PackageIcon size={18} />, label: "Mis pedidos" },
@@ -153,6 +253,19 @@ export function Dashboard() {
               <h2 className="font-display font-bold text-2xl text-white uppercase mb-5">
                 Mis pedidos
               </h2>
+              {myOrders.length === 0 && (
+                <div className="bg-sigo-card border border-sigo-border rounded-xl p-10 text-center">
+                  <div className="text-5xl mb-3">📦</div>
+                  <p className="text-white font-display font-bold text-lg">Aún no tienes pedidos</p>
+                  <p className="text-sigo-muted mt-1 text-sm">Los pedidos que realices aparecerán aquí.</p>
+                  <Link
+                    to="/catalog"
+                    className="inline-block mt-4 bg-sigo-orange hover:bg-sigo-orange-dark text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
+                  >
+                    Ir al catálogo
+                  </Link>
+                </div>
+              )}
               <div className="space-y-4">
                 {myOrders.map((order) => (
                   <div
@@ -255,63 +368,108 @@ export function Dashboard() {
               <h2 className="font-display font-bold text-2xl text-white uppercase mb-5">
                 Direcciones
               </h2>
-              <div className="bg-sigo-card border border-sigo-border rounded-xl p-5 mb-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-white font-semibold">Carlos Mendoza</p>
-                    <p className="text-sigo-muted text-sm mt-1">
-                      Zona 4, 6a avenida 12-45
-                    </p>
-                    <p className="text-sigo-muted text-sm">Mixco, Guatemala</p>
-                  </div>
-                  <span className="bg-sigo-orange/20 text-sigo-orange text-xs px-2 py-0.5 rounded font-bold">
-                    PRINCIPAL
-                  </span>
+
+              {addresses.length === 0 && !showAddressForm && (
+                <div className="bg-sigo-card border border-sigo-border rounded-xl p-6 mb-4 text-center text-sigo-muted">
+                  Aún no tienes direcciones guardadas. Agrega una para agilizar tus pedidos.
                 </div>
-              </div>
+              )}
+
+              {/* Lista de direcciones */}
+              {addresses.map((a, i) => (
+                <div key={a.id} className="bg-sigo-card border border-sigo-border rounded-xl p-5 mb-4">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold">{a.name}</p>
+                      <p className="text-sigo-muted text-sm mt-1">{a.detail}</p>
+                      <p className="text-sigo-muted text-sm">
+                        {[a.municipality, a.department].filter(Boolean).join(", ")}
+                      </p>
+                    </div>
+                    {i === 0 && (
+                      <span className="bg-sigo-orange/20 text-sigo-orange text-xs px-2 py-0.5 rounded font-bold whitespace-nowrap">
+                        PRINCIPAL
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-3 mt-3 text-sm">
+                    <button onClick={() => openEditAddress(a)} className="text-sigo-orange hover:underline font-semibold">
+                      Editar
+                    </button>
+                    {i !== 0 && (
+                      <button onClick={() => makePrimary(a.id)} className="text-sigo-light hover:text-white">
+                        Marcar como principal
+                      </button>
+                    )}
+                    <button onClick={() => deleteAddress(a.id)} className="text-red-400 hover:underline">
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Formulario agregar / editar */}
               {showAddressForm && (
                 <div className="bg-sigo-card border border-sigo-border rounded-xl p-5 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="label-admin">Departamento *</label>
-                    <input className="input-sigo" defaultValue="Guatemala" />
+                  <div className="md:col-span-2">
+                    <label className="label-admin">Nombre de quien recibe *</label>
+                    <input
+                      className="input-sigo"
+                      value={addrForm.name}
+                      onChange={(e) => setAddrForm({ ...addrForm, name: e.target.value })}
+                      placeholder="Ej. Carlos Mendoza"
+                    />
                   </div>
                   <div>
-                    <label className="label-admin">Municipio *</label>
-                    <input className="input-sigo" defaultValue="Mixco" />
+                    <label className="label-admin">Departamento</label>
+                    <input
+                      className="input-sigo"
+                      value={addrForm.department}
+                      onChange={(e) => setAddrForm({ ...addrForm, department: e.target.value })}
+                      placeholder="Ej. Guatemala"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-admin">Municipio</label>
+                    <input
+                      className="input-sigo"
+                      value={addrForm.municipality}
+                      onChange={(e) => setAddrForm({ ...addrForm, municipality: e.target.value })}
+                      placeholder="Ej. Mixco"
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <label className="label-admin">Dirección *</label>
                     <input
                       className="input-sigo"
+                      value={addrForm.detail}
+                      onChange={(e) => setAddrForm({ ...addrForm, detail: e.target.value })}
                       placeholder="Zona, calle, avenida y número"
                     />
                   </div>
                   <div className="md:col-span-2 flex gap-3">
-                    <button
-                      onClick={() => {
-                        setShowAddressForm(false)
-                        setNotice("Dirección guardada correctamente.")
-                      }}
-                      className="bg-sigo-orange text-white font-bold px-5 py-2 rounded-lg"
-                    >
-                      Guardar dirección
+                    <button onClick={saveAddress} className="bg-sigo-orange hover:bg-sigo-orange-dark text-white font-bold px-5 py-2 rounded-lg transition-colors">
+                      {editingId ? "Guardar cambios" : "Guardar dirección"}
                     </button>
                     <button
-                      onClick={() => setShowAddressForm(false)}
-                      className="text-sigo-muted px-5 py-2"
+                      onClick={() => { setShowAddressForm(false); setEditingId(null) }}
+                      className="text-sigo-muted hover:text-white px-5 py-2"
                     >
                       Cancelar
                     </button>
                   </div>
                 </div>
               )}
-              <button
-                onClick={() => setShowAddressForm(true)}
-                className="flex items-center gap-2 border border-dashed border-sigo-border hover:border-sigo-orange text-sigo-muted hover:text-sigo-orange w-full p-4 rounded-xl transition-colors"
-              >
-                <span className="text-xl">+</span>
-                <span>Agregar nueva dirección</span>
-              </button>
+
+              {!showAddressForm && (
+                <button
+                  onClick={openNewAddress}
+                  className="flex items-center gap-2 border border-dashed border-sigo-border hover:border-sigo-orange text-sigo-muted hover:text-sigo-orange w-full p-4 rounded-xl transition-colors"
+                >
+                  <span className="text-xl">+</span>
+                  <span>Agregar nueva dirección</span>
+                </button>
+              )}
             </div>
           )}
 
