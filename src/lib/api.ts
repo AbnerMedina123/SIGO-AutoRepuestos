@@ -345,6 +345,7 @@ export interface NewOrderItem {
 
 export interface NewOrder {
   id: string;
+  customerId?: string | null;
   customerName: string;
   subtotal: number;
   discount: number;
@@ -356,9 +357,52 @@ export interface NewOrder {
   items: NewOrderItem[];
 }
 
+export interface CustomerContact {
+  fullName: string;
+  email: string;
+  phone: string;
+}
+
+/**
+ * Registra al cliente a partir de los datos del checkout, usando el correo
+ * (o el teléfono) como identificador estable. Devuelve el id del cliente.
+ *
+ * Hace un INSERT; si el cliente ya existe (misma clave) el error de clave
+ * duplicada se ignora, de modo que no se necesita una política RLS de UPDATE
+ * para el público. La acumulación de compras se calcula desde los pedidos.
+ */
+export async function registerCustomer(contact: CustomerContact): Promise<string | null> {
+  const email = contact.email.trim().toLowerCase();
+  const phone = contact.phone.trim();
+  const key = email || phone;
+  if (!key) return null;
+
+  const parts = contact.fullName.trim().split(/\s+/);
+  const firstName = parts[0] ?? '';
+  const lastName = parts.slice(1).join(' ');
+  const id = 'C-' + key.replace(/[^a-z0-9]/gi, '').slice(0, 40);
+
+  const { error } = await supabase.from('customers').insert({
+    id,
+    first_name: firstName,
+    last_name: lastName,
+    email,
+    phone,
+    status: 'active',
+  });
+
+  // 23505 = clave duplicada (el cliente ya existía): no es un error real aquí.
+  if (error && error.code !== '23505') {
+    console.error('No se pudo registrar el cliente:', error);
+    return null;
+  }
+  return id;
+}
+
 export async function createOrder(order: NewOrder): Promise<void> {
   const { error: orderError } = await supabase.from('orders').insert({
     id: order.id,
+    customer_id: order.customerId ?? null,
     customer_name: order.customerName,
     subtotal: order.subtotal,
     discount: order.discount,

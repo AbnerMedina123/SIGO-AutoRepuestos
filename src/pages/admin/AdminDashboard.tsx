@@ -13,15 +13,15 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-import {
-  salesData,
-  categoryData,
-  orderStatusData,
-  topProducts,
-} from "../../data/mockData"
 import { useData } from "../../store/DataProvider"
 import { OrderStatusBadge } from "../../components/ui/Badge"
 import { formatCurrency } from "../../lib/whatsapp"
+import {
+  salesByMonth,
+  ordersByStatus,
+  topProducts as computeTopProducts,
+  salesByCategory,
+} from "../../lib/analytics"
 
 import type { Product, Order, Customer } from "../../data/mockData"
 
@@ -87,8 +87,17 @@ const COLORS = [
 ]
 
 export function AdminDashboard() {
-  const { products, orders, customers } = useData()
+  const { products, orders, customers, categories } = useData()
   const statCards = buildStatCards(products, orders, customers)
+
+  // Datos reales para las gráficas (calculados desde los pedidos de Supabase).
+  const salesData = salesByMonth(orders, 6)
+  const statusData = ordersByStatus(orders)
+  const topData = computeTopProducts(orders, 5)
+  const categoryData = salesByCategory(orders, products, categories)
+  const recentOrders = [...orders]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5)
   return (
     <div>
       <div className="mb-6">
@@ -128,7 +137,7 @@ export function AdminDashboard() {
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={salesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2E2E2E" />
-              <XAxis dataKey="month" tick={{ fill: "#6B6B6B", fontSize: 12 }} />
+              <XAxis dataKey="label" tick={{ fill: "#6B6B6B", fontSize: 12 }} />
               <YAxis
                 tick={{ fill: "#6B6B6B", fontSize: 12 }}
                 tickFormatter={(v) => `Q${(v / 1000).toFixed(0)}k`}
@@ -165,7 +174,7 @@ export function AdminDashboard() {
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie
-                data={orderStatusData}
+                data={statusData}
                 cx="50%"
                 cy="50%"
                 innerRadius={50}
@@ -173,7 +182,7 @@ export function AdminDashboard() {
                 paddingAngle={3}
                 dataKey="value"
               >
-                {orderStatusData.map((entry, i) => (
+                {statusData.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
@@ -187,7 +196,7 @@ export function AdminDashboard() {
             </PieChart>
           </ResponsiveContainer>
           <div className="mt-2 space-y-1">
-            {orderStatusData.slice(0, 4).map((e) => (
+            {statusData.slice(0, 4).map((e) => (
               <div key={e.name} className="flex justify-between text-xs">
                 <span
                   className="flex items-center gap-1.5"
@@ -214,7 +223,7 @@ export function AdminDashboard() {
             Productos más vendidos
           </h3>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={topProducts} layout="vertical">
+            <BarChart data={topData} layout="vertical">
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#2E2E2E"
@@ -306,7 +315,7 @@ export function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {orders.slice(0, 5).map((o) => (
+              {recentOrders.map((o) => (
                 <tr
                   key={o.id}
                   className="row-hover border-b border-sigo-border/50 last:border-0"

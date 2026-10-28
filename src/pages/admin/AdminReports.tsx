@@ -9,51 +9,63 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
-import {
-  salesData,
-  topProducts,
-  categoryData,
-  orderStatusData,
-} from "../../data/mockData"
 import { useData } from "../../store/DataProvider"
 import { useState } from "react"
 import { formatCurrency } from "../../lib/whatsapp"
 import { useLocation } from "react-router-dom"
-
-const dailyData = [
-  { day: "Lun", sales: 1240, orders: 9 },
-  { day: "Mar", sales: 1890, orders: 14 },
-  { day: "Mié", sales: 1420, orders: 11 },
-  { day: "Jue", sales: 2100, orders: 16 },
-  { day: "Vie", sales: 2680, orders: 21 },
-  { day: "Sáb", sales: 1850, orders: 14 },
-  { day: "Dom", sales: 980, orders: 7 },
-]
+import {
+  salesByMonth,
+  salesByWeekday,
+  salesByDay,
+  ordersByStatus,
+  topProducts as computeTopProducts,
+  salesByCategory,
+  salesSummary,
+} from "../../lib/analytics"
 
 export function AdminReports() {
   const location = useLocation()
-  const { products } = useData()
+  const { products, orders, customers, categories } = useData()
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("weekly")
 
-  // Normaliza ambos orígenes de datos a una forma uniforme ({ label, sales,
-  // orders }) para que las gráficas de Recharts reciban un único tipo.
+  // Datos reales calculados desde los pedidos de Supabase.
   const chartData =
     period === "monthly"
-      ? salesData.map((d) => ({ label: d.month, sales: d.sales, orders: d.orders }))
-      : dailyData.map((d) => ({ label: d.day, sales: d.sales, orders: d.orders }))
+      ? salesByMonth(orders, 6)
+      : period === "daily"
+        ? salesByDay(orders)
+        : salesByWeekday(orders)
+
+  const statusData = ordersByStatus(orders)
+  const topData = computeTopProducts(orders, 5)
+  const categoryData = salesByCategory(orders, products, categories)
+  const summary = salesSummary(orders, customers.length)
+
+  const summaryCards = [
+    { label: "Ventas confirmadas", value: formatCurrency(summary.confirmedRevenue) },
+    { label: "Pedidos confirmados", value: summary.confirmedOrders.toString() },
+    { label: "Valor promedio por pedido", value: formatCurrency(summary.avgTicket) },
+    { label: "Clientes registrados", value: summary.customersCount.toString() },
+  ]
+
   const periodLabels = {
     daily: "Diario",
     weekly: "Semanal",
     monthly: "Mensual",
   }
+
   const exportReport = () => {
-    const csv =
-      "Periodo,Ventas confirmadas,Pedidos confirmados\nActual,31200,241"
+    // Exporta las ventas confirmadas reales por periodo seleccionado.
+    const rows = [["Periodo", "Ventas confirmadas (Q)", "Pedidos confirmados"]]
+    for (const p of chartData) {
+      rows.push([p.label, p.sales.toFixed(2), p.orders.toString()])
+    }
+    rows.push([])
+    rows.push(["Total ventas confirmadas", summary.confirmedRevenue.toFixed(2), summary.confirmedOrders.toString()])
+    const csv = rows.map((r) => r.join(",")).join("\n")
     const link = document.createElement("a")
-    link.href = URL.createObjectURL(
-      new Blob([csv], { type: "text/csv;charset=utf-8" }),
-    )
-    link.download = "reporte-sigo.csv"
+    link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }))
+    link.download = `reporte-sigo-${period}.csv`
     link.click()
     URL.revokeObjectURL(link.href)
   }
@@ -97,25 +109,13 @@ export function AdminReports() {
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: "Ventas confirmadas", value: "Q31,200", trend: "+8.4%" },
-          { label: "Pedidos confirmados", value: "241", trend: "+12.1%" },
-          {
-            label: "Valor promedio por pedido",
-            value: "Q129.46",
-            trend: "+3.2%",
-          },
-          { label: "Clientes nuevos", value: "38", trend: "+15.8%" },
-        ].map((s) => (
+        {summaryCards.map((s) => (
           <div
             key={s.label}
             className="bg-sigo-card border border-sigo-border rounded-xl p-4"
           >
             <div className="price-tag text-white text-2xl">{s.value}</div>
             <div className="text-sigo-muted text-xs mt-0.5">{s.label}</div>
-            <div className="text-green-400 text-xs mt-1">
-              {s.trend} en este período
-            </div>
           </div>
         ))}
       </div>
@@ -180,17 +180,21 @@ export function AdminReports() {
           <h3 className="font-display font-bold text-white text-lg uppercase mb-4">
             Pedidos por estado
           </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {orderStatusData.map((item) => (
-              <div
-                key={item.name}
-                className="bg-sigo-surface rounded-lg p-3 flex justify-between gap-3"
-              >
-                <span className="text-sigo-light text-sm">{item.name}</span>
-                <span className="text-white font-bold">{item.value}</span>
-              </div>
-            ))}
-          </div>
+          {statusData.length === 0 ? (
+            <p className="text-sigo-muted text-sm py-6 text-center">Aún no hay pedidos registrados.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {statusData.map((item) => (
+                <div
+                  key={item.name}
+                  className="bg-sigo-surface rounded-lg p-3 flex justify-between gap-3"
+                >
+                  <span className="text-sigo-light text-sm">{item.name}</span>
+                  <span className="text-white font-bold">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="bg-sigo-card border border-sigo-border rounded-xl p-5">
           <h3 className="font-display font-bold text-white text-lg uppercase mb-4">
@@ -227,14 +231,14 @@ export function AdminReports() {
                 <div
                   className={`h-full ${item.cls}`}
                   style={{
-                    width: `${Math.max(8, (item.value / products.length) * 100)}%`,
+                    width: `${products.length ? Math.max(8, (item.value / products.length) * 100) : 0}%`,
                   }}
                 />
               </div>
             </div>
           ))}
           <p className="text-sigo-muted text-xs mt-4">
-            Datos de demostración basados en el catálogo actual.
+            Basado en el inventario actual de productos.
           </p>
         </div>
       </div>
@@ -260,27 +264,33 @@ export function AdminReports() {
               </tr>
             </thead>
             <tbody>
-              {topProducts.map((p, i) => (
-                <tr
-                  key={p.name}
-                  className="border-b border-sigo-border/50 last:border-0"
-                >
-                  <td className="py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sigo-muted text-xs font-mono w-4">
-                        {i + 1}
-                      </span>
-                      <span className="text-white text-xs">{p.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-2.5 text-right text-sigo-light">
-                    {p.sales}
-                  </td>
-                  <td className="py-2.5 text-right price-tag text-sigo-orange">
-                    {formatCurrency(p.revenue)}
+              {topData.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="py-6 text-center text-sigo-muted text-sm">
+                    Aún no hay ventas registradas.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                topData.map((p, i) => (
+                  <tr
+                    key={p.name}
+                    className="border-b border-sigo-border/50 last:border-0"
+                  >
+                    <td className="py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sigo-muted text-xs font-mono w-4">
+                          {i + 1}
+                        </span>
+                        <span className="text-white text-xs">{p.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 text-right text-sigo-light">{p.sales}</td>
+                    <td className="py-2.5 text-right price-tag text-sigo-orange">
+                      {formatCurrency(p.revenue)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -289,22 +299,26 @@ export function AdminReports() {
           <h3 className="font-display font-bold text-white text-lg uppercase mb-4">
             Categorías más vendidas
           </h3>
-          <div className="space-y-3">
-            {categoryData.map((c) => (
-              <div key={c.name}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-white">{c.name}</span>
-                  <span className="text-sigo-orange font-bold">{c.value}%</span>
+          {categoryData.length === 0 ? (
+            <p className="text-sigo-muted text-sm py-6 text-center">Aún no hay ventas registradas.</p>
+          ) : (
+            <div className="space-y-3">
+              {categoryData.map((c) => (
+                <div key={c.name}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-white">{c.name}</span>
+                    <span className="text-sigo-orange font-bold">{c.value}%</span>
+                  </div>
+                  <div className="w-full bg-sigo-surface rounded-full h-2">
+                    <div
+                      className="bg-sigo-orange rounded-full h-2 transition-all"
+                      style={{ width: `${c.value}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-sigo-surface rounded-full h-2">
-                  <div
-                    className="bg-sigo-orange rounded-full h-2 transition-all"
-                    style={{ width: `${c.value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import {
   formatCurrency,
   type ShippingInfo,
 } from '../../lib/whatsapp';
-import { createOrder } from '../../lib/api';
+import { createOrder, registerCustomer } from '../../lib/api';
 
 type Step = 'shipping' | 'review';
 
@@ -69,8 +69,15 @@ export function Checkout() {
     // Si falla (p. ej. sin conexión), igual continuamos con WhatsApp para no
     // bloquear la venta: el pedido siempre puede confirmarse por ese canal.
     try {
+      // Registra al cliente (si trae correo o teléfono) y enlaza el pedido.
+      const customerId = await registerCustomer({
+        fullName: info.fullName,
+        email: info.email,
+        phone: info.phone,
+      });
       await createOrder({
         id: orderId,
+        customerId,
         customerName: info.fullName,
         subtotal: cartTotal,
         discount: 0,
