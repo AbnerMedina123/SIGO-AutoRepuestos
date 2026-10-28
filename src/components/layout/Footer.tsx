@@ -3,6 +3,9 @@ import sigoLogo from '../../assets/sigo-logo.png';
 import { WhatsAppIcon } from '../ui/Icons';
 import { WHATSAPP_URL } from '../../lib/whatsapp';
 
+const FACEBOOK_URL =
+  'https://www.facebook.com/people/SI-GO/pfbid0hASQtr3egfTtquicKVYUSADzfCrFj1ps2GDaWJsGiSYH9Rh8Yhp9joKPd8Qs7XJQl/';
+
 export function Footer() {
   return (
     <footer className="bg-sigo-dark border-t border-sigo-border mt-20">
@@ -13,15 +16,28 @@ export function Footer() {
             <p className="text-sigo-muted text-sm leading-relaxed">
               Repuestos automotrices de calidad para vehículos livianos y pesados. La confianza de mecánicos y transportistas.
             </p>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-            >
-              <WhatsAppIcon size={16} />
-              Escríbenos por WhatsApp
-            </a>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              >
+                <WhatsAppIcon size={16} />
+                WhatsApp
+              </a>
+              <a
+                href={FACEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] border border-[#1877F2]/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.03 4.39 11.03 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+                </svg>
+                Facebook
+              </a>
+            </div>
           </div>
 
           <div>
@@ -69,6 +85,17 @@ export function Footer() {
               <li>📞 +502 4575 2892</li>
               <li>✉️ info@sigoautorepuestos.com</li>
               <li>🕐 Lun–Vie 8:00–18:00<br />Sáb 8:00–13:00</li>
+              <li>
+                📘{' '}
+                <a
+                  href={FACEBOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-sigo-orange transition-colors"
+                >
+                  SI GO en Facebook
+                </a>
+              </li>
             </ul>
           </div>
         </div>

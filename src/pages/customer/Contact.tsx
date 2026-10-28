@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { WhatsAppIcon, ChevronRightIcon } from '../../components/ui/Icons';
 import { createWhatsAppUrl, WHATSAPP_URL } from '../../lib/whatsapp';
 
+const FACEBOOK_URL =
+  'https://www.facebook.com/people/SI-GO/pfbid0hASQtr3egfTtquicKVYUSADzfCrFj1ps2GDaWJsGiSYH9Rh8Yhp9joKPd8Qs7XJQl/';
+
 const contactInfo = [
   { icon: '📍', label: 'Dirección', value: 'SIGO Autorepuestos, Guatemala, Guatemala' },
   { icon: '📞', label: 'Teléfono', value: '+502 4575 2892' },
@@ -151,6 +154,20 @@ ${form.message.trim()}`;
                   </div>
                 </li>
               ))}
+              <li className="flex items-start gap-3">
+                <span className="text-2xl leading-none">📘</span>
+                <div>
+                  <p className="text-sigo-muted text-xs uppercase tracking-wider font-semibold">Facebook</p>
+                  <a
+                    href={FACEBOOK_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sigo-orange hover:underline text-sm mt-0.5 inline-block"
+                  >
+                    SI GO Autorepuestos
+                  </a>
+                </div>
+              </li>
             </ul>
           </div>
 
@@ -162,6 +179,18 @@ ${form.message.trim()}`;
           >
             <WhatsAppIcon size={20} />
             Escríbenos directamente
+          </a>
+
+          <a
+            href={FACEBOOK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 bg-[#1877F2]/10 border border-[#1877F2]/40 text-[#1877F2] hover:bg-[#1877F2]/20 font-semibold py-3.5 rounded-2xl transition-colors"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.03 4.39 11.03 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+            </svg>
+            Síguenos en Facebook
           </a>
         </div>
       </div>
