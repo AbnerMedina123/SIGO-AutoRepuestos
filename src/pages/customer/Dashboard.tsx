@@ -54,6 +54,35 @@ const emptyAddress: Omit<Address, "id"> = {
   detail: "",
 }
 
+interface Profile {
+  firstName: string
+  lastName: string
+  phone: string
+}
+
+// El perfil del cliente se guarda en el navegador (localStorage) por correo,
+// igual que las direcciones. El modelo actual no tiene cuentas reales por
+// cliente, así que esto conserva sus datos en su dispositivo.
+const profileKey = (email?: string) => `sigo-profile:${email ?? "guest"}`
+
+function loadProfile(email?: string): Profile {
+  try {
+    const raw = localStorage.getItem(profileKey(email))
+    if (raw) return JSON.parse(raw) as Profile
+  } catch {
+    // ignora
+  }
+  return { firstName: "", lastName: "", phone: "" }
+}
+
+function saveProfile(email: string | undefined, profile: Profile) {
+  try {
+    localStorage.setItem(profileKey(email), JSON.stringify(profile))
+  } catch {
+    // ignora
+  }
+}
+
 const stepOrder: string[] = [
   "Pending",
   "Confirmed",
@@ -105,6 +134,35 @@ export function Dashboard() {
   useEffect(() => {
     setAddresses(loadAddresses(user?.email))
   }, [user?.email])
+
+  // Perfil del cliente (persistido en localStorage por correo).
+  const [profile, setProfile] = useState<Profile>({ firstName: "", lastName: "", phone: "" })
+
+  useEffect(() => {
+    const stored = loadProfile(user?.email)
+    // Si aún no hay perfil guardado, precargamos el nombre de la sesión.
+    if (!stored.firstName && !stored.lastName && user?.name) {
+      const parts = user.name.split(/\s+/)
+      setProfile({ firstName: parts[0] ?? "", lastName: parts.slice(1).join(" "), phone: "" })
+    } else {
+      setProfile(stored)
+    }
+  }, [user?.email, user?.name])
+
+  const saveProfileChanges = () => {
+    if (!profile.firstName.trim()) {
+      setNotice("El nombre no puede quedar vacío.")
+      setTimeout(() => setNotice(""), 2500)
+      return
+    }
+    saveProfile(user?.email, {
+      firstName: profile.firstName.trim(),
+      lastName: profile.lastName.trim(),
+      phone: profile.phone.trim(),
+    })
+    setNotice("Perfil actualizado correctamente.")
+    setTimeout(() => setNotice(""), 2500)
+  }
 
   const persist = (list: Address[]) => {
     setAddresses(list)
@@ -336,25 +394,53 @@ export function Dashboard() {
               </h2>
               <div className="bg-sigo-card border border-sigo-border rounded-xl p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { label: "Nombre", value: "Carlos" },
-                    { label: "Apellido", value: "Mendoza" },
-                    { label: "Correo electrónico", value: user?.email ?? "" },
-                    { label: "Teléfono", value: "+502 7890 1234" },
-                  ].map((f) => (
-                    <div key={f.label}>
-                      <label className="block text-sigo-muted text-xs font-semibold uppercase mb-1">
-                        {f.label}
-                      </label>
-                      <input defaultValue={f.value} className="input-sigo" />
-                    </div>
-                  ))}
+                  <div>
+                    <label className="block text-sigo-muted text-xs font-semibold uppercase mb-1">
+                      Nombre
+                    </label>
+                    <input
+                      className="input-sigo"
+                      value={profile.firstName}
+                      onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                      placeholder="Tu nombre"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sigo-muted text-xs font-semibold uppercase mb-1">
+                      Apellido
+                    </label>
+                    <input
+                      className="input-sigo"
+                      value={profile.lastName}
+                      onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                      placeholder="Tu apellido"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sigo-muted text-xs font-semibold uppercase mb-1">
+                      Correo electrónico
+                    </label>
+                    <input
+                      className="input-sigo opacity-70 cursor-not-allowed"
+                      value={user?.email ?? ""}
+                      readOnly
+                      title="El correo es el identificador de tu cuenta y no se puede cambiar aquí."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sigo-muted text-xs font-semibold uppercase mb-1">
+                      Teléfono
+                    </label>
+                    <input
+                      className="input-sigo"
+                      value={profile.phone}
+                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                      placeholder="+502 0000 0000"
+                    />
+                  </div>
                 </div>
                 <button
-                  onClick={() => {
-                    setNotice("Perfil actualizado correctamente.")
-                    setTimeout(() => setNotice(""), 2500)
-                  }}
+                  onClick={saveProfileChanges}
                   className="bg-sigo-orange hover:bg-sigo-orange-dark text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
                 >
                   Guardar cambios
