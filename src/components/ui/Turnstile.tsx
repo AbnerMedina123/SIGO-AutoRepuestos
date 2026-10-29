@@ -24,7 +24,11 @@ function ensureScript(onReady: () => void) {
     onReady();
     return;
   }
-  window.onTurnstileLoad = onReady;
+  const prev = window.onTurnstileLoad;
+  window.onTurnstileLoad = () => {
+    prev?.();
+    onReady();
+  };
   if (document.querySelector(`script[src="${SCRIPT_SRC}"]`)) return;
   const s = document.createElement('script');
   s.src = SCRIPT_SRC;
@@ -34,9 +38,13 @@ function ensureScript(onReady: () => void) {
 }
 
 /**
- * Widget de Cloudflare Turnstile (CAPTCHA invisible/ligero).
- * Llama a `onToken` con el token cuando el usuario pasa la verificación, y a
- * `onExpire` cuando el token caduca. Si no hay site key, no renderiza nada.
+ * Widget de Cloudflare Turnstile (CAPTCHA).
+ * Se renderiza UNA sola vez y mantiene estable el widget. Llama a `onToken`
+ * cuando el usuario pasa la verificación y a `onExpire` cuando caduca.
+ *
+ * Nota: usamos refs para los callbacks (no como dependencias del efecto) para
+ * evitar que el widget se vuelva a montar en cada render — eso causaba el
+ * parpadeo "aparece y desaparece".
  */
 export function Turnstile({
   onToken,
@@ -47,25 +55,34 @@ export function Turnstile({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
+  const rendered = useRef(false);
+
+  // Mantiene los callbacks actuales sin re-ejecutar el efecto de montaje.
+  const onTokenRef = useRef(onToken);
+  const onExpireRef = useRef(onExpire);
+  onTokenRef.current = onToken;
+  onExpireRef.current = onExpire;
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY || !ref.current) return;
     const container = ref.current;
-    let cancelled = false;
 
     ensureScript(() => {
-      if (cancelled || !window.turnstile || !container) return;
+      // Evita el doble render (React StrictMode monta efectos dos veces).
+      if (rendered.current || !window.turnstile || !container) return;
+      rendered.current = true;
       widgetId.current = window.turnstile.render(container, {
         sitekey: TURNSTILE_SITE_KEY,
         theme: 'dark',
-        callback: (token: string) => onToken(token),
-        'expired-callback': () => onExpire?.(),
-        'error-callback': () => onExpire?.(),
+        retry: 'auto',
+        'refresh-expired': 'auto',
+        callback: (token: string) => onTokenRef.current(token),
+        'expired-callback': () => onExpireRef.current?.(),
+        'error-callback': () => onExpireRef.current?.(),
       });
     });
 
     return () => {
-      cancelled = true;
       if (widgetId.current && window.turnstile) {
         try {
           window.turnstile.remove(widgetId.current);
@@ -73,8 +90,12 @@ export function Turnstile({
           // ignora
         }
       }
+      widgetId.current = null;
+      rendered.current = false;
     };
-  }, [onToken, onExpire]);
+    // Sin dependencias: se monta y desmonta una sola vez con el componente.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!TURNSTILE_SITE_KEY) return null;
   return <div ref={ref} className="my-2" />;
