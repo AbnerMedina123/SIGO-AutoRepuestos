@@ -10,6 +10,7 @@ import {
   authErrorMessage,
 } from "../../lib/auth"
 import { registerCustomer } from "../../lib/api"
+import { Turnstile, turnstileEnabled } from "../../components/ui/Turnstile"
 import sigoLogo from "../../assets/sigo-logo.png"
 
 export function Login() {
@@ -21,6 +22,7 @@ export function Login() {
   const [notice, setNotice] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [captcha, setCaptcha] = useState("")
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,11 +30,15 @@ export function Login() {
       setError("Completa todos los campos.")
       return
     }
+    if (turnstileEnabled && !captcha) {
+      setError("Completa la verificación de seguridad.")
+      return
+    }
     setError("")
     setLoading(true)
     try {
       // Autentica contra Supabase: verifica de verdad la contraseña.
-      await signInWithPassword(email.trim(), password)
+      await signInWithPassword(email.trim(), password, captcha || undefined)
       const admin = await isCurrentUserAdmin()
       if (admin) {
         login(email.trim(), true)
@@ -139,6 +145,8 @@ export function Login() {
               </button>
             </div>
 
+            <Turnstile onToken={setCaptcha} onExpire={() => setCaptcha("")} />
+
             <button
               type="submit"
               disabled={loading}
@@ -224,6 +232,7 @@ export function Register() {
   const [legalInfo, setLegalInfo] = useState("")
 
   const [registering, setRegistering] = useState(false)
+  const [captcha, setCaptcha] = useState("")
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -250,16 +259,25 @@ export function Register() {
       setError("Acepta los términos y condiciones.")
       return
     }
+    if (turnstileEnabled && !captcha) {
+      setError("Completa la verificación de seguridad.")
+      return
+    }
 
     setError("")
     setRegistering(true)
     try {
       // Crea la cuenta real en Supabase Auth (valida el correo y cifra la
       // contraseña). Guarda nombre y teléfono como metadatos del usuario.
-      await signUpWithPassword(email, form.password, {
-        full_name: `${form.firstName} ${form.lastName}`.trim(),
-        phone: form.phone.trim(),
-      })
+      await signUpWithPassword(
+        email,
+        form.password,
+        {
+          full_name: `${form.firstName} ${form.lastName}`.trim(),
+          phone: form.phone.trim(),
+        },
+        captcha || undefined,
+      )
 
       // Registra también al cliente en la tabla para que aparezca en el panel.
       await registerCustomer({
@@ -429,6 +447,8 @@ export function Register() {
                 </button>
               </span>
             </label>
+
+            <Turnstile onToken={setCaptcha} onExpire={() => setCaptcha("")} />
 
             <button
               type="submit"

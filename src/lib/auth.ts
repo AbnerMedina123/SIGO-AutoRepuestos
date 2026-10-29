@@ -6,8 +6,12 @@ export interface AdminSession {
 }
 
 /** Inicia sesión con correo y contraseña. Lanza error si las credenciales fallan. */
-export async function signInWithPassword(email: string, password: string) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+export async function signInWithPassword(email: string, password: string, captchaToken?: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+    options: captchaToken ? { captchaToken } : undefined,
+  });
   if (error) throw error;
   return data;
 }
@@ -21,11 +25,12 @@ export async function signUpWithPassword(
   email: string,
   password: string,
   metadata?: Record<string, string>,
+  captchaToken?: string,
 ) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: metadata },
+    options: { data: metadata, captchaToken },
   });
   if (error) throw error;
   return data;
