@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# No indexar el panel administrativo ni rutas de sesión.
+Disallow: /admin
+Disallow: /auth/
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /checkout
+Disallow: /cart
+
+Sitemap: https://sigoautorepuestos.netlify.app/sitemap.xml

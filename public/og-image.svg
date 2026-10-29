@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="SIGO Autorepuestos">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1a1a"/>
+      <stop offset="1" stop-color="#0a0a0a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- franja naranja lateral -->
+  <rect x="0" y="0" width="14" height="630" fill="#ff6a00"/>
+  <!-- rayas decorativas -->
+  <g opacity="0.06" stroke="#ff6a00" stroke-width="26">
+    <line x1="820" y1="700" x2="1300" y2="120"/>
+    <line x1="950" y1="720" x2="1400" y2="260"/>
+  </g>
+  <!-- engranaje -->
+  <g transform="translate(1000 315)" fill="none" stroke="#ff6a00" stroke-width="16" opacity="0.5">
+    <circle r="120"/>
+    <circle r="60"/>
+  </g>
+  <!-- texto -->
+  <text x="70" y="250" font-family="Arial, Helvetica, sans-serif" font-size="110" font-weight="900" fill="#ffffff">SI<tspan fill="#ff6a00">GO</tspan></text>
+  <text x="74" y="320" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="bold" fill="#ffffff" letter-spacing="6">AUTOREPUESTOS</text>
+  <text x="74" y="360" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#ff6a00" letter-spacing="8">LIVIANO Y PESADO</text>
+  <text x="74" y="460" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#cccccc">Repuestos de calidad para tu vehículo</text>
+  <text x="74" y="505" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#8a8a8a">Motor · Frenos · Suspensión · Filtros · y más</text>
+  <text x="74" y="565" font-family="Arial, Helvetica, sans-serif" font-size="26" fill="#25D366">Atención y pedidos por WhatsApp — Guatemala</text>
+</svg>

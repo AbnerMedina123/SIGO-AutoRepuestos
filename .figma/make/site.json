@@ -1,11 +1,15 @@
 {
-  "title": "SIGO Autorepuestos",
-  "description": "Repuestos automotrices de calidad para vehículos livianos y pesados en Guatemala. Encuentra motor, frenos, suspensión, filtros y más, con atención por WhatsApp.",
+  "title": "SIGO Autorepuestos | Repuestos para vehículos livianos y pesados en Guatemala",
+  "description": "Repuestos automotrices de calidad para vehículos livianos y pesados en Guatemala. Motor, frenos, suspensión, transmisión, filtros, lubricantes y más. Atención y pedidos por WhatsApp.",
+  "language": "es",
   "icons": {
     "icon": "/favicon.svg"
   },
+  "openGraph": {
+    "image": "https://sigoautorepuestos.netlify.app/og-image.svg"
+  },
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,
