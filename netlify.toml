@@ -13,6 +13,14 @@
   # Evita que Netlify detecte/instale con pnpm o yarn automáticamente.
   NPM_FLAGS = "--no-audit --no-fund"
 
+# Archivo de verificación de Google Search Console: servirlo tal cual,
+# NO redirigirlo al SPA (debe entregar el .html de verificación exacto).
+[[redirects]]
+  from = "/google8eee1b829c5c6457.html"
+  to = "/google8eee1b829c5c6457.html"
+  status = 200
+  force = true
+
 # SPA fallback: cualquier ruta desconocida sirve index.html para que
 # React Router maneje la navegación (evita 404 al refrescar /catalog, /admin, etc.)
 [[redirects]]
