@@ -15,6 +15,7 @@ import { Cart } from './pages/customer/Cart';
 import { Checkout } from './pages/customer/Checkout';
 import { Login, Register } from './pages/customer/Auth';
 import { AuthCallback } from './pages/customer/AuthCallback';
+import { ForgotPassword, ResetPassword } from './pages/customer/PasswordRecovery';
 import { Dashboard } from './pages/customer/Dashboard';
 import { OrderConfirmation } from './pages/customer/OrderConfirmation';
 import { Privacy } from './pages/customer/Privacy';
@@ -67,6 +68,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<CustomerLayout><Dashboard /></CustomerLayout>} />
           <Route path="/orders" element={<CustomerLayout><Dashboard /></CustomerLayout>} />
           <Route path="/about" element={<CustomerLayout><About /></CustomerLayout>} />

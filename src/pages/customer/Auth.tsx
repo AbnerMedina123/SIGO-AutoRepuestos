@@ -19,7 +19,6 @@ export function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [notice, setNotice] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [captcha, setCaptcha] = useState("")
@@ -86,15 +85,6 @@ export function Login() {
                 {error}
               </div>
             )}
-            {notice && (
-              <div
-                role="status"
-                className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm px-4 py-2.5 rounded-lg"
-              >
-                {notice}
-              </div>
-            )}
-
             <div>
               <label className="block text-sigo-muted text-xs font-semibold uppercase mb-1.5">
                 Correo electrónico
@@ -130,19 +120,9 @@ export function Login() {
             </div>
 
             <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() =>
-                  setNotice(
-                    email
-                      ? `Enviamos instrucciones a ${email}.`
-                      : "Escribe tu correo electrónico para recuperar tu contraseña.",
-                  )
-                }
-                className="text-sigo-orange text-sm hover:underline"
-              >
+              <Link to="/forgot-password" className="text-sigo-orange text-sm hover:underline">
                 ¿Olvidaste tu contraseña?
-              </button>
+              </Link>
             </div>
 
             <Turnstile onToken={setCaptcha} onExpire={() => setCaptcha("")} />

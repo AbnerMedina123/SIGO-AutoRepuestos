@@ -77,6 +77,24 @@ export async function getSession() {
 }
 
 /**
+ * Envía un correo con el enlace para restablecer la contraseña.
+ * El enlace lleva a /reset-password, donde el usuario escribe la nueva clave.
+ */
+export async function sendPasswordReset(email: string, captchaToken?: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${window.location.origin}/reset-password`,
+    captchaToken,
+  });
+  if (error) throw error;
+}
+
+/** Actualiza la contraseña del usuario autenticado (tras el enlace de recuperación). */
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
+/**
  * Comprueba si el usuario autenticado actual es administrador, usando la
  * función `is_admin()` definida en la base de datos (respaldada por RLS).
  */
