@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useData } from '../../store/DataProvider';
 import { ProductCard } from '../../components/ui/ProductCard';
 import { Badge, StockBadge } from '../../components/ui/Badge';
-import { ShoppingCartIcon, PlusIcon, MinusIcon, WhatsAppIcon, CheckIcon, ChevronRightIcon } from '../../components/ui/Icons';
+import { ShoppingCartIcon, PlusIcon, MinusIcon, WhatsAppIcon, CheckIcon, ChevronRightIcon, HeartIcon } from '../../components/ui/Icons';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import { createWhatsAppUrl, formatCurrency } from '../../lib/whatsapp';
 import { imgFallback } from '../../lib/images';
+import { isFavorite, toggleFavorite, subscribeFavorites } from '../../lib/favorites';
 
 export function ProductDetail() {
   const { id } = useParams();
@@ -19,6 +20,13 @@ export function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [tab, setTab] = useState<'desc' | 'specs' | 'warranty'>('desc');
   const [added, setAdded] = useState(false);
+  const [fav, setFav] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    setFav(isFavorite(id));
+    return subscribeFavorites(() => setFav(isFavorite(id)));
+  }, [id]);
 
   if (loading) return (
     <div className="max-w-4xl mx-auto px-4 py-20 text-center">
@@ -93,6 +101,19 @@ Precio: ${formatCurrency(price)}
           <div className="flex items-center gap-2 mb-3">
             <Badge status={product.status} />
             <StockBadge status={stockStatus} />
+            <button
+              onClick={() => toggleFavorite(product.id)}
+              aria-label={fav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              title={fav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              className={`ml-auto flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
+                fav
+                  ? 'bg-sigo-orange/10 border-sigo-orange/40 text-sigo-orange'
+                  : 'border-sigo-border text-sigo-light hover:text-sigo-orange hover:border-sigo-orange/40'
+              }`}
+            >
+              <HeartIcon size={16} fill={fav ? 'currentColor' : 'none'} />
+              {fav ? 'En favoritos' : 'Favorito'}
+            </button>
           </div>
 
           <h1 className="font-display font-black text-3xl md:text-4xl text-white leading-tight mb-2">
