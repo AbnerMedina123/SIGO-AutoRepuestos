@@ -1,15 +1,20 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCartIcon, EyeIcon } from './Icons';
+import { ShoppingCartIcon, EyeIcon, HeartIcon } from './Icons';
 import { Badge } from './Badge';
 import type { Product } from '../../data/mockData';
 import { useStore } from '../../store/useStore';
 import { formatCurrency } from '../../lib/whatsapp';
 import { imgFallback } from '../../lib/images';
+import { isFavorite, toggleFavorite, subscribeFavorites } from '../../lib/favorites';
 
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useStore();
   const price = product.salePrice ?? product.price;
   const outOfStock = product.status === 'OUT_OF_STOCK' || product.stock === 0;
+
+  const [fav, setFav] = useState(() => isFavorite(product.id));
+  useEffect(() => subscribeFavorites(() => setFav(isFavorite(product.id))), [product.id]);
 
   return (
     <div className="card-hover bg-sigo-card border border-sigo-border rounded-lg overflow-hidden flex flex-col group">
@@ -28,8 +33,21 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="absolute top-2 left-2">
           <Badge status={product.status} />
         </div>
+
+        {/* Botón de favorito */}
+        <button
+          onClick={() => toggleFavorite(product.id)}
+          aria-label={fav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          title={fav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          className={`absolute top-2 right-2 rounded-full p-1.5 transition-colors backdrop-blur-sm ${
+            fav ? 'bg-sigo-orange/90 text-white' : 'bg-black/50 text-white hover:bg-black/70'
+          }`}
+        >
+          <HeartIcon size={16} fill={fav ? 'currentColor' : 'none'} />
+        </button>
+
         {product.salePrice && (
-          <div className="absolute top-2 right-2 bg-sigo-orange text-white text-xs font-bold px-2 py-0.5 rounded font-display">
+          <div className="absolute top-12 right-2 bg-sigo-orange text-white text-xs font-bold px-2 py-0.5 rounded font-display">
             -{Math.round((1 - product.salePrice / product.price) * 100)}%
           </div>
         )}

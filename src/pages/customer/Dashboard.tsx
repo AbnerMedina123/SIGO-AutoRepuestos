@@ -3,8 +3,11 @@ import { Link, useNavigate } from "react-router-dom"
 import { useStore } from "../../store/useStore"
 import type { Order } from "../../data/mockData"
 import { OrderStatusBadge } from "../../components/ui/Badge"
+import { ProductCard } from "../../components/ui/ProductCard"
 import { imgFallback } from "../../lib/images"
 import { loadLocalOrders } from "../../lib/localOrders"
+import { useData } from "../../store/DataProvider"
+import { getFavorites, subscribeFavorites } from "../../lib/favorites"
 import {
   UserIcon,
   PackageIcon,
@@ -134,6 +137,15 @@ export function Dashboard() {
   useEffect(() => {
     setAddresses(loadAddresses(user?.email))
   }, [user?.email])
+
+  // Favoritos: IDs guardados en el navegador, resueltos contra el catálogo.
+  const { products } = useData()
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([])
+  useEffect(() => {
+    setFavoriteIds(getFavorites())
+    return subscribeFavorites(setFavoriteIds)
+  }, [])
+  const favoriteProducts = products.filter((p) => favoriteIds.includes(p.id))
 
   // Perfil del cliente (persistido en localStorage por correo).
   const [profile, setProfile] = useState<Profile>({ firstName: "", lastName: "", phone: "" })
@@ -564,17 +576,27 @@ export function Dashboard() {
               <h2 className="font-display font-bold text-2xl text-white uppercase mb-5">
                 Favoritos
               </h2>
-              <div className="text-center py-16 text-sigo-muted">
-                <p className="text-xl font-display font-bold text-white">
-                  Aún no tienes favoritos
-                </p>
-                <Link
-                  to="/catalog"
-                  className="text-sigo-orange mt-3 inline-block hover:underline"
-                >
-                  Ver productos
-                </Link>
-              </div>
+              {favoriteProducts.length === 0 ? (
+                <div className="text-center py-16 text-sigo-muted">
+                  <div className="text-5xl mb-3">🧡</div>
+                  <p className="text-xl font-display font-bold text-white">
+                    Aún no tienes favoritos
+                  </p>
+                  <p className="mt-1 text-sm">Marca productos con el corazón para guardarlos aquí.</p>
+                  <Link
+                    to="/catalog"
+                    className="text-sigo-orange mt-4 inline-block hover:underline font-semibold"
+                  >
+                    Ver productos
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {favoriteProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
