@@ -56,6 +56,43 @@ export function Checkout() {
       setError('Completa todos los campos obligatorios para continuar.');
       return;
     }
+
+    // Validación de formato y longitud antes de continuar.
+    const name = info.fullName.trim();
+    if (name.length < 3 || name.length > 80) {
+      setError('El nombre debe tener entre 3 y 80 caracteres.');
+      return;
+    }
+
+    // Teléfono de Guatemala: 8 dígitos (acepta espacios o guiones al escribir).
+    const phoneDigits = info.phone.replace(/[\s-]/g, '');
+    if (!/^\d{8}$/.test(phoneDigits)) {
+      setError('Ingresa un teléfono válido de 8 dígitos (ej. 4575 2892).');
+      return;
+    }
+
+    // Correo con un formato básico válido.
+    const email = info.email.trim();
+    if (email.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Ingresa un correo electrónico válido.');
+      return;
+    }
+
+    // Límites de longitud para evitar datos abusivos en campos de texto.
+    const maxLengths: { value: string; max: number; label: string }[] = [
+      { value: info.department, max: 60, label: 'departamento' },
+      { value: info.municipality, max: 60, label: 'municipio' },
+      { value: info.address, max: 200, label: 'dirección' },
+      { value: info.zone, max: 40, label: 'zona' },
+      { value: info.reference, max: 200, label: 'referencia' },
+      { value: info.comments, max: 500, label: 'comentarios' },
+    ];
+    const tooLong = maxLengths.find(field => field.value.trim().length > field.max);
+    if (tooLong) {
+      setError(`El campo "${tooLong.label}" supera el máximo de ${tooLong.max} caracteres.`);
+      return;
+    }
+
     setError('');
     setStep('review');
     window.scrollTo({ top: 0, behavior: 'smooth' });
