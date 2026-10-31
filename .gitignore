@@ -20,3 +20,11 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Documentos internos de seguridad (auditoría, STRIDE, DREAD). No deben ser
+# públicos: describen la postura de seguridad y los riesgos del sistema.
+/docs/
+
+# Configuración local de Kiro/MCP (específica de la máquina, puede incluir
+# rutas y referencias a credenciales). No es código del proyecto.
+/.kiro/
