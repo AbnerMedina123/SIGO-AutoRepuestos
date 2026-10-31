@@ -1,0 +1,49 @@
+# Análisis de seguridad del código con CodeQL (SAST gratuito de GitHub).
+# Escanea el código JavaScript/TypeScript en busca de vulnerabilidades y malas
+# prácticas (inyección, XSS, flujos de datos inseguros, etc.) en cada push a
+# main, en cada pull request y una vez por semana. Los resultados aparecen en
+# la pestaña "Security" -> "Code scanning alerts" del repositorio en GitHub.
+
+name: "CodeQL"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # Lunes a las 06:00 UTC (análisis programado semanal).
+    - cron: "0 6 * * 1"
+
+jobs:
+  analyze:
+    name: Analizar (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      # Necesario para subir los resultados del análisis a GitHub.
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # El proyecto es TypeScript + JavaScript; una sola categoría cubre ambos.
+        language: ["javascript-typescript"]
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # "security-and-quality" incluye las reglas de seguridad más amplias
+          # más comprobaciones de calidad de código.
+          queries: security-and-quality
+
+      - name: Analizar con CodeQL
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
