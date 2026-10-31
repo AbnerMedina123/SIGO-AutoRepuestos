@@ -1,0 +1,69 @@
+# Análisis de Composición de Software (SCA) — revisa vulnerabilidades conocidas
+# en las dependencias del proyecto (npm). Combina dos capas:
+#   1. npm audit        -> rápido, nativo de npm; falla ante CVE de severidad alta.
+#   2. OWASP Dependency-Check -> cruza las dependencias contra la base NVD/CVE y
+#      publica un reporte en la pestaña Security (formato SARIF).
+# Se ejecuta en cada push a main, en cada pull request y una vez por semana.
+
+name: "SCA — Dependencias"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # Lunes a las 06:30 UTC (análisis programado semanal).
+    - cron: "30 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias (sin ejecutar scripts)
+        run: npm ci --ignore-scripts
+
+      # Falla el job si hay vulnerabilidades de severidad alta o crítica.
+      # Las moderadas/bajas se reportan pero no bloquean.
+      - name: npm audit (alta/crítica)
+        run: npm audit --audit-level=high
+
+  owasp-dependency-check:
+    name: OWASP Dependency-Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "SIGO-AutoRepuestos"
+          path: "."
+          format: "SARIF"
+          # Argumentos: analiza Node, omite directorios irrelevantes.
+          args: >
+            --enableExperimental
+            --scan ./package-lock.json
+            --scan ./package.json
+
+      - name: Subir reporte SARIF a Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "${{ github.workspace }}/reports/dependency-check-report.sarif"
