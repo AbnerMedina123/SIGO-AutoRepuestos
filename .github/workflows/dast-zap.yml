@@ -1,0 +1,41 @@
+# DAST (análisis dinámico) con OWASP ZAP en modo BASELINE.
+#
+# Baseline = rastreo (spider) + reglas PASIVAS. Solo observa las respuestas del
+# sitio en producción; NO lanza ataques activos (sin inyecciones ni fuzzing).
+#
+# Alcance: ÚNICAMENTE el dominio propio del proyecto. Supabase, Google y
+# Cloudflare no se escanean (ZAP no sale del dominio objetivo).
+#
+# Se ejecuta: una vez por semana, manualmente (Actions -> Run workflow) y
+# cuando se edita este mismo archivo. NO corre en cada push, para no generar
+# tráfico innecesario contra producción.
+
+name: "DAST — OWASP ZAP (baseline)"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Lunes a las 07:00 UTC.
+    - cron: "0 7 * * 1"
+  push:
+    paths:
+      - ".github/workflows/dast-zap.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    name: ZAP baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Escaneo baseline con OWASP ZAP
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: "https://sigoautorepuestos.netlify.app"
+          # No crear issues en el repo (es público): los hallazgos se consultan
+          # solo en el reporte adjunto a la ejecución.
+          allow_issue_writing: false
+          # Los avisos (WARN) no deben marcar el job como fallido.
+          fail_action: false
+          artifact_name: "zap-baseline-report"
