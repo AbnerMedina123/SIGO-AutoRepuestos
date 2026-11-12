@@ -44,6 +44,10 @@
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
     # Desactiva APIs del navegador que el sitio no usa.
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    # Aísla el contexto de navegación del sitio frente a ventanas de otros
+    # orígenes (mitiga ataques tipo Spectre). El login con Google usa redirección,
+    # no ventana emergente, así que no se ve afectado.
+    Cross-Origin-Opener-Policy = "same-origin"
     # Content Security Policy: restringe de dónde se puede cargar cada recurso.
     # Incluye los dominios que la app realmente usa: Supabase (API/Storage),
     # Google Fonts y OAuth, Unsplash (imágenes), y datos/blobs locales.
