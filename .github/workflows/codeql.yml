@@ -15,6 +15,10 @@ on:
     # Lunes a las 06:00 UTC (análisis programado semanal).
     - cron: "0 6 * * 1"
 
+# Permisos mínimos por defecto; el job de análisis amplía solo lo que necesita.
+permissions:
+  contents: read
+
 jobs:
   analyze:
     name: Analizar (${{ matrix.language }})
