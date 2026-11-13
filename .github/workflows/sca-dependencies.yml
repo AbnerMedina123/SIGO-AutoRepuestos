@@ -76,6 +76,17 @@ jobs:
       - name: Checkout del repositorio
         uses: actions/checkout@v7
 
+      # Dependency-Check analiza mejor los proyectos Node cuando las
+      # dependencias están instaladas (node_modules). Sin esto, la primera
+      # versión de este workflow terminó con "Dependencies Scanned: 0".
+      - name: Configurar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias (sin ejecutar scripts)
+        run: npm ci --ignore-scripts
+
       - name: OWASP Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
@@ -83,11 +94,8 @@ jobs:
           path: "."
           # ALL genera HTML (legible), JSON y SARIF (para la pestaña Security).
           format: "ALL"
-          # Argumentos: analiza Node, omite directorios irrelevantes.
           args: >
             --enableExperimental
-            --scan ./package-lock.json
-            --scan ./package.json
 
       # Reportes completos (HTML/JSON/SARIF), descargables desde "Artifacts".
       - name: Guardar reportes de Dependency-Check
@@ -97,6 +105,23 @@ jobs:
           name: dependency-check-report
           path: ${{ github.workspace }}/reports
           retention-days: 90
+
+      # Control anti falso negativo: si el análisis no vio ninguna dependencia,
+      # el "0 vulnerabilidades" no significa nada, así que el job debe fallar.
+      - name: Verificar que Dependency-Check analizó dependencias
+        run: |
+          REPORT=reports/dependency-check-report.json
+          TOTAL=$(jq '.dependencies | length' "$REPORT")
+          VULN=$(jq '[.dependencies[] | select(.vulnerabilities != null)] | length' "$REPORT")
+          {
+            echo "### OWASP Dependency-Check"
+            echo "- Dependencias analizadas: **${TOTAL}**"
+            echo "- Dependencias con vulnerabilidades: **${VULN}**"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "::error::Dependency-Check analizó 0 dependencias; el resultado no es válido."
+            exit 1
+          fi
 
       - name: Subir reporte SARIF a Code Scanning
         uses: github/codeql-action/upload-sarif@v4
