@@ -40,6 +40,32 @@ jobs:
       - name: npm audit (alta/crítica)
         run: npm audit --audit-level=high
 
+      # --- Evidencia -------------------------------------------------------
+      # Resumen legible en la página de la ejecución (pestaña "Summary").
+      - name: Resumen de npm audit en la ejecución
+        if: always()
+        run: |
+          {
+            echo "### npm audit — $(date -u +%Y-%m-%dT%H:%MZ)"
+            echo "Commit: \`${GITHUB_SHA}\`"
+            echo '```'
+            npm audit || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Reporte completo en JSON, descargable desde "Artifacts".
+      - name: Generar reporte JSON de npm audit
+        if: always()
+        run: npm audit --json > npm-audit-report.json || true
+
+      - name: Guardar reporte de npm audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json
+          retention-days: 90
+
   owasp-dependency-check:
     name: OWASP Dependency-Check
     runs-on: ubuntu-latest
@@ -55,12 +81,22 @@ jobs:
         with:
           project: "SIGO-AutoRepuestos"
           path: "."
-          format: "SARIF"
+          # ALL genera HTML (legible), JSON y SARIF (para la pestaña Security).
+          format: "ALL"
           # Argumentos: analiza Node, omite directorios irrelevantes.
           args: >
             --enableExperimental
             --scan ./package-lock.json
             --scan ./package.json
+
+      # Reportes completos (HTML/JSON/SARIF), descargables desde "Artifacts".
+      - name: Guardar reportes de Dependency-Check
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: ${{ github.workspace }}/reports
+          retention-days: 90
 
       - name: Subir reporte SARIF a Code Scanning
         uses: github/codeql-action/upload-sarif@v4
