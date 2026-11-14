@@ -1,0 +1,66 @@
+# Reglas propias de Semgrep para los scripts SQL de Supabase (RLS).
+# CodeQL no analiza SQL; estas reglas cubren ese hueco con búsquedas de patrón
+# (modo "generic"), no con un análisis semántico del SQL: pueden dejar pasar
+# variantes de escritura que no contemplan y pueden marcar casos legítimos.
+# Se prueban con:  semgrep --test semgrep-rules   (ver rls-rules.sql)
+
+rules:
+  - id: sigo-rls-insert-policy-with-check-true
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      Política de INSERT con `with check (true)`: cualquiera con la clave
+      pública puede insertar filas arbitrarias. Valida los campos (montos,
+      longitudes, estado) como en security-hardening.sql y rls-hardening-2.sql.
+    pattern-regex: '(?is)create\s+policy\b[^;]*?\bfor\s+insert\b[^;]*?\bwith\s+check\s*\(\s*true\s*\)'
+    paths:
+      include: ["*.sql"]
+    metadata:
+      category: security
+      owasp: "A01:2021 - Broken Access Control"
+      cwe: "CWE-285: Improper Authorization"
+
+  - id: sigo-rls-write-policy-using-true
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      Política de escritura (ALL/UPDATE/DELETE) con `using (true)`: cualquiera
+      puede modificar o borrar filas. Restringe con public.is_admin() o una
+      condición sobre auth.uid(). (Las políticas de SELECT público no se marcan.)
+    pattern-regex: '(?is)create\s+policy\b[^;]*?\bfor\s+(?:all|update|delete)\b[^;]*?\busing\s*\(\s*true\s*\)'
+    paths:
+      include: ["*.sql"]
+    metadata:
+      category: security
+      owasp: "A01:2021 - Broken Access Control"
+      cwe: "CWE-285: Improper Authorization"
+
+  - id: sigo-sql-security-definer-without-search-path
+    languages: [generic]
+    severity: WARNING
+    message: >-
+      Función SECURITY DEFINER sin `set search_path`: puede ejecutarse con
+      objetos suplantados en otro esquema. Agrega `set search_path = public`
+      (o el esquema que corresponda).
+    pattern-regex: '(?is)create\s+(?:or\s+replace\s+)?function\b(?=(?:(?!\bas\s+\$).)*?security\s+definer)(?!(?:(?!\bas\s+\$).)*?set\s+search_path)'
+    paths:
+      include: ["*.sql"]
+    metadata:
+      category: security
+      owasp: "A05:2021 - Security Misconfiguration"
+      cwe: "CWE-426: Untrusted Search Path"
+
+  - id: sigo-rls-disabled-or-table-grant-to-anon
+    languages: [generic]
+    severity: ERROR
+    message: >-
+      Se desactiva RLS en una tabla o se conceden privilegios de tabla al rol
+      `anon`. Con la clave pública expuesta en el navegador, esto abre la
+      tabla a cualquier visitante.
+    pattern-regex: '(?is)(?:alter\s+table\b[^;]*?\bdisable\s+row\s+level\s+security|\bgrant\s+(?:all|insert|update|delete)\b[^;]*?\bon\b[^;]*?\bto\b[^;]*?\banon\b)'
+    paths:
+      include: ["*.sql"]
+    metadata:
+      category: security
+      owasp: "A01:2021 - Broken Access Control"
+      cwe: "CWE-732: Incorrect Permission Assignment for Critical Resource"

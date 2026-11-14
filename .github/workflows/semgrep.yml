@@ -1,0 +1,94 @@
+# SAST con Semgrep (complementa a CodeQL).
+#   - Reglas públicas de Semgrep para TypeScript, React, OWASP Top 10 y secretos.
+#   - Reglas propias para los scripts SQL de Supabase (RLS), que CodeQL no analiza
+#     (semgrep-rules/rls-rules.yaml, con sus pruebas en rls-rules.sql).
+# Modo informativo: los hallazgos se publican en Security -> Code scanning pero
+# NO hacen fallar el job. Sí falla si las pruebas de las reglas propias fallan o
+# si el escaneo no analizó archivos (para evitar un "0 hallazgos" vacío).
+
+name: "SAST — Semgrep"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    # Lunes a las 07:30 UTC.
+    - cron: "30 7 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  SEMGREP_VERSION: "1.185.0"
+
+jobs:
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v7
+
+      - name: Instalar Semgrep
+        run: pipx install "semgrep==${SEMGREP_VERSION}"
+
+      # Demuestra que las reglas propias marcan lo inseguro y dejan pasar lo seguro.
+      - name: Probar las reglas propias
+        run: semgrep --test --metrics=off semgrep-rules
+
+      - name: Escanear con Semgrep
+        run: |
+          semgrep scan \
+            --config p/typescript \
+            --config p/react \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config semgrep-rules/rls-rules.yaml \
+            --exclude semgrep-rules \
+            --json-output semgrep.json \
+            --sarif-output semgrep.sarif
+
+      # Control anti falso negativo + resumen visible en la ejecución.
+      - name: Verificar cobertura y resumir
+        run: |
+          TOTAL=$(jq '.paths.scanned | length' semgrep.json)
+          SRC=$(jq '[.paths.scanned[] | select(test("^src/.*\\.(ts|tsx)$"))] | length' semgrep.json)
+          SQL=$(jq '[.paths.scanned[] | select(test("^supabase/.*\\.sql$"))] | length' semgrep.json)
+          FINDINGS=$(jq '.results | length' semgrep.json)
+          ERRORS=$(jq '.errors | length' semgrep.json)
+          {
+            echo "### Semgrep"
+            echo "- Archivos analizados: **${TOTAL}** (TypeScript/TSX en src/: **${SRC}**, SQL en supabase/: **${SQL}**)"
+            echo "- Hallazgos: **${FINDINGS}** | Errores del escáner: **${ERRORS}**"
+            echo ""
+            echo "| Regla | Hallazgos |"
+            echo "|---|---|"
+            jq -r '.results | group_by(.check_id) | map("| \(.[0].check_id | split(".") | last) | \(length) |") | .[]' semgrep.json
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$SRC" -eq 0 ] || [ "$SQL" -eq 0 ]; then
+            echo "::error::Semgrep no analizó archivos de src/ o de supabase/; el resultado no es válido."
+            exit 1
+          fi
+
+      - name: Guardar reportes de Semgrep
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: semgrep-report
+          path: |
+            semgrep.json
+            semgrep.sarif
+          retention-days: 90
+
+      - name: Subir resultados a Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
