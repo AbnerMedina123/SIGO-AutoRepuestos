@@ -12,6 +12,12 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    # El runtime del proyecto es Node 22 (.mise.toml y netlify.toml). Los tipos
+    # de una versión mayor de Node superior podrían aceptar APIs que no existen
+    # en ejecución, así que se ignoran los saltos de versión mayor de este paquete.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     # Agrupa las actualizaciones menores y parches en un solo PR.
     groups:
       minor-and-patch:
