@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Escaneo baseline con OWASP ZAP
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: "https://sigoautorepuestos.netlify.app"
           # No crear issues en el repo (es público): los hallazgos se consultan
