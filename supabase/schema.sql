@@ -133,6 +133,28 @@ alter table public.customers    enable row level security;
 alter table public.orders       enable row level security;
 alter table public.order_items  enable row level security;
 
+-- --- Función auxiliar para order_items (equivale a rls-hardening-2.sql) ------
+-- ¿existe un pedido pendiente creado hace pocos minutos? SECURITY DEFINER porque
+-- el público no puede leer orders (RLS); solo devuelve un booleano.
+create or replace function public.order_is_recent(p_order_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.orders o
+    where o.id = p_order_id
+      and o.status = 'Pending'
+      and o.created_at > now() - interval '15 minutes'
+  );
+$$;
+
+revoke all on function public.order_is_recent(text) from public;
+grant execute on function public.order_is_recent(text) to anon, authenticated;
+
 -- --- admins: solo un admin puede ver la tabla de admins ----------------------
 create policy "admins_select_self_or_admin" on public.admins
   for select using (auth.uid() = id or public.is_admin());
@@ -152,10 +174,21 @@ create policy "products_admin_write" on public.products
 -- --- customers: solo admin (datos personales) --------------------------------
 create policy "customers_admin_read" on public.customers
   for select using (public.is_admin());
--- Permite crear clientes desde el checkout público (cualquiera puede insertar
--- su propio registro de cliente). Editar/borrar: solo admin.
+-- Permite crear clientes desde el checkout público, CON validaciones de cordura
+-- (longitudes máximas; solo como 'active' y sin compras ni pedidos precargados).
+-- Editar/borrar: solo admin. Equivale a security-hardening.sql.
 create policy "customers_public_insert" on public.customers
-  for insert with check (true);
+  for insert
+  with check (
+    char_length(id) <= 64
+    and char_length(first_name) <= 100
+    and char_length(last_name) <= 100
+    and char_length(email) <= 200
+    and char_length(phone) <= 40
+    and status = 'active'
+    and orders = 0
+    and total_purchases = 0
+  );
 create policy "customers_admin_update" on public.customers
   for update using (public.is_admin()) with check (public.is_admin());
 create policy "customers_admin_delete" on public.customers
@@ -164,8 +197,25 @@ create policy "customers_admin_delete" on public.customers
 -- --- orders: el checkout público puede crear; solo admin puede leer/editar ---
 create policy "orders_admin_read" on public.orders
   for select using (public.is_admin());
+-- Inserción pública con validaciones de negocio (equivale a rls-hardening-2.sql):
+-- un pedido nuevo nace pendiente, sin descuento y con total coherente.
 create policy "orders_public_insert" on public.orders
-  for insert with check (true);
+  for insert
+  with check (
+    status = 'Pending'
+    and discount = 0
+    and subtotal >= 0
+    and shipping >= 0
+    and shipping <= 1000
+    and total >= 0
+    and total <= 10000000
+    and abs(total - (subtotal - discount + shipping)) <= 0.05
+    and char_length(customer_name) <= 200
+    and char_length(address) <= 500
+    and char_length(id) <= 64
+    and char_length(payment_method) <= 100
+    and char_length(delivery_method) <= 100
+  );
 create policy "orders_admin_update" on public.orders
   for update using (public.is_admin()) with check (public.is_admin());
 create policy "orders_admin_delete" on public.orders
@@ -174,8 +224,19 @@ create policy "orders_admin_delete" on public.orders
 -- --- order_items: igual que orders -------------------------------------------
 create policy "order_items_admin_read" on public.order_items
   for select using (public.is_admin());
+-- Inserción pública: solo sobre un pedido pendiente creado hace pocos minutos
+-- (equivale a rls-hardening-2.sql; usa la función public.order_is_recent).
 create policy "order_items_public_insert" on public.order_items
-  for insert with check (true);
+  for insert
+  with check (
+    public.order_is_recent(order_id)
+    and quantity > 0
+    and quantity <= 100000
+    and unit_price >= 0
+    and unit_price <= 1000000
+    and char_length(product_name) <= 300
+    and char_length(product_code) <= 100
+  );
 create policy "order_items_admin_update" on public.order_items
   for update using (public.is_admin()) with check (public.is_admin());
 create policy "order_items_admin_delete" on public.order_items

@@ -12,6 +12,12 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    # Espera 7 días tras la publicación de una versión antes de proponerla (el
+    # valor por defecto de Dependabot es 3): da tiempo a que se detecten versiones
+    # comprometidas o retiradas. Solo aplica a actualizaciones de versión; las de
+    # seguridad (Dependabot security updates) no se retrasan.
+    cooldown:
+      default-days: 7
     # El runtime del proyecto es Node 22 (.mise.toml y netlify.toml). Los tipos
     # de una versión mayor de Node superior podrían aceptar APIs que no existen
     # en ejecución, así que se ignoran los saltos de versión mayor de este paquete.
@@ -31,3 +37,7 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 3
+    # Las acciones van fijadas por hash de commit; Dependabot propone el hash
+    # nuevo (conservando el comentario de versión) tras 7 días de espera.
+    cooldown:
+      default-days: 7
