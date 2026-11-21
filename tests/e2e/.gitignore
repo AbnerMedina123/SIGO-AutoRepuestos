@@ -1,0 +1,5 @@
+# Artefactos de las pruebas de interfaz (no se versionan).
+node_modules/
+test-results/
+playwright-report/
+.dist-app/
